@@ -369,23 +369,8 @@ cfwgs_neg <- neg_sets[["cfWGS"]]
 mfc_also_cfwgs <- intersect(mfc_neg, cfwgs_neg)
 seq_also_cfwgs <- intersect(seq_neg, cfwgs_neg)
 
-# Build prose summaries used to check values reported in the manuscript text.
-mfc_sentence <- sprintf(
-  "Of %d patients that were negative at both timepoints by MFC, %d (%.1f%%) were also negative by cfWGS.",
-  length(mfc_neg),
-  length(mfc_also_cfwgs),
-  100 * length(mfc_also_cfwgs) / max(1, length(mfc_neg))
-)
 
-seq_sentence <- sprintf(
-  "Of %d patients that were negative at both timepoints by clonoSEQ, %d (%.1f%%) were also negative by cfWGS.",
-  length(seq_neg),
-  length(seq_also_cfwgs),
-  100 * length(seq_also_cfwgs) / max(1, length(seq_neg))
-)
 
-mfc_sentence
-seq_sentence
 
 # Analyst note: paired-assay availability counts used to verify the sample
 # denominators that appear in concordance text.
@@ -408,17 +393,7 @@ front_counts <- dat %>%
     .groups = "drop"
   )
 
-concord_sentence <- front_counts %>%
-  mutate(tp_label = recode(landmark_tp, !!!tp_labels)) %>%
-  arrange(match(tp_label, c("post-ASCT", "1-year maintenance"))) %>%
-  summarise(
-    sentence = glue(
-      "We assessed concordance between cfDNA-based MRD and clinical assays at {glue_collapse(glue('{tp_label} in samples with at least one clinical MRD result (n = {n_with_clinical}/{n_total_cfWGS_screen})'), sep = ' and ')}."
-    )
-  ) %>%
-  pull(sentence)
 
-concord_sentence
 
 # ---------------------------------------------------------------------------
 #  4.  NON-FRONTLINE cohort: pooled positivity -------------------------------
@@ -902,17 +877,7 @@ front_counts <- dat %>%
     .groups = "drop"
   )
 
-concord_sentence <- front_counts %>%
-  mutate(tp_label = recode(landmark_tp, !!!tp_labels)) %>%
-  arrange(match(tp_label, c("post-ASCT", "1-year maintenance"))) %>%
-  summarise(
-    sentence = glue(
-      "We assessed concordance between cfDNA-based MRD and clinical assays at {glue_collapse(glue('{tp_label} in samples with at least one clinical MRD result (n = {n_with_clinical}/{n_total_cfWGS_screen})'), sep = ' and ')}."
-    )
-  ) %>%
-  pull(sentence)
 
-concord_sentence
 
 front_tbl <- dat %>%
   filter(
@@ -992,23 +957,8 @@ cfwgs_neg <- neg_sets[["cfWGS"]]
 mfc_also_cfwgs <- intersect(mfc_neg, cfwgs_neg)
 seq_also_cfwgs <- intersect(seq_neg, cfwgs_neg)
 
-# Build sentences
-mfc_sentence <- sprintf(
-  "Of %d patients that were negative at both timepoints by MFC, %d (%.1f%%) were also negative by cfWGS.",
-  length(mfc_neg),
-  length(mfc_also_cfwgs),
-  100 * length(mfc_also_cfwgs) / max(1, length(mfc_neg))
-)
 
-seq_sentence <- sprintf(
-  "Of %d patients that were negative at both timepoints by clonoSEQ, %d (%.1f%%) were also negative by cfWGS.",
-  length(seq_neg),
-  length(seq_also_cfwgs),
-  100 * length(seq_also_cfwgs) / max(1, length(seq_neg))
-)
 
-mfc_sentence
-seq_sentence
 
 
 # ---------------------------------------------------------------------------
@@ -1090,43 +1040,11 @@ combo_tbl <- combo_tbl %>%
     
   )
 
-# Analyst note: build prose snippets for checking the Figure 4C percentages
-# against the plotted denominators.
-fig_ref   <- "Figure 4C"
-cohort_in <- "Training Cohort"                    # must match combo_tbl labels
 
-# Helper: fetch row for a (timepoint, technology, cohort) and format "XX% (a/b)"
-pull_fmt <- function(df, tp, tech, cohort = cohort_in, digits = 0) {
-  row <- df %>%
-    filter(landmark_tp == tp, Technology == tech, Cohort == cohort) %>%
-    slice(1)
-  
-  if (nrow(row) == 0 || is.na(row$n_total) || row$n_total == 0) return("NA")
-  
-  pct <- round(100 * row$pos_rate, digits)
-  sprintf("%d%% (%d/%d)", pct, row$n_pos, row$n_total)
-}
 
-# Helper: build one sentence for a given timepoint
-build_sentence <- function(df, tp, fig = fig_ref) {
-  cfwgs <- pull_fmt(df, tp, "cfWGS")
-  seqv <- pull_fmt(df, tp, "clonoSEQ")
-  mfc  <- pull_fmt(df, tp, "MFC")
-  
-  sprintf(
-    "At %s, cfWGS identified %s as MRD-positive, with clinical assays showing %s by clonoSEQ and %s by MFC (%s).",
-    tp, cfwgs, seqv, mfc, fig
-  )
-}
 
-tp1 <- "Post-ASCT"
-tp2 <- "Maintenance-1yr"
 
-sentence_postASCT   <- build_sentence(combo_tbl, tp1)
-sentence_maint1year <- build_sentence(combo_tbl, tp2)
 
-sentence_postASCT
-sentence_maint1year
 
 
 p_pos_by_tech <- ggplot(combo_tbl, 
@@ -1401,60 +1319,6 @@ stats_out <- list(
 
 print(stats_out)
 
-# ---------------------------------------------------------------------------
-# 7.  Manuscript-text denominator check --------------------------------------
-# Print a paragraph-style summary so analysts can cross-check values in the
-# manuscript text. This does not create a final manuscript artifact.
-write_para <- TRUE
-
-if (write_para) {
-  # helpers to pull numbers
-  g <- function(a,b,df) df %>% filter(test_a==a, test_b==b) %>% pull(n_conc)
-  n <- function(a,b,df) df %>% filter(test_a==a, test_b==b) %>% pull(n_total)
-  r <- function(a,b,df) df %>% filter(test_a==a, test_b==b) %>% pull(conc_rate)
-  
-  # post‑ASCT numbers
-  X  <- g("BM_zscore_only_detection_rate_call","Adaptive_Binary", post_conc)
-  Y  <- n("BM_zscore_only_detection_rate_call","Adaptive_Binary", post_conc)
-  XX <- sprintf("%.0f", 100*r("BM_zscore_only_detection_rate_call","Adaptive_Binary", post_conc))
-  Xp <- g("BM_zscore_only_detection_rate_call","Flow_Binary", post_conc)
-  Yp <- n("BM_zscore_only_detection_rate_call","Flow_Binary", post_conc)
-  XXp<- sprintf("%.0f", 100*r("BM_zscore_only_detection_rate_call","Flow_Binary", post_conc))
-  Z  <- g("Adaptive_Binary","Flow_Binary", post_conc)
-  W  <- n("Adaptive_Binary","Flow_Binary", post_conc)
-  YY <- sprintf("%.0f",100*r("Adaptive_Binary","Flow_Binary", post_conc))
-  
-  # discordant counts
-  n_cf_pos_cl_neg <- post_conc %>%
-    filter(test_a=="BM_zscore_only_detection_rate_call", test_b=="Adaptive_Binary") %>%
-    pull(a_pos_b_neg)
-  m_cf_neg_cl_pos <- post_conc %>%
-    filter(test_a=="BM_zscore_only_detection_rate_call", test_b=="Adaptive_Binary") %>%
-    pull(a_neg_b_pos)
-  
-  # maintenance
-  A  <- g("BM_zscore_only_detection_rate_call","Adaptive_Binary", maint_conc)
-  B  <- n("BM_zscore_only_detection_rate_call","Adaptive_Binary", maint_conc)
-  AA <- sprintf("%.0f",100*r("BM_zscore_only_detection_rate_call","Adaptive_Binary", maint_conc))
-  C  <- g("BM_zscore_only_detection_rate_call","Flow_Binary", maint_conc)
-  D  <- n("BM_zscore_only_detection_rate_call","Flow_Binary", maint_conc)
-  BB <- sprintf("%.0f",100*r("BM_zscore_only_detection_rate_call","Flow_Binary", maint_conc))
-  
-  p <- ppv_post$PPV; q <- ppv_post$NPV
-  p2<- ppv_maint$PPV; q2<- ppv_maint$NPV
-  
-  para <- glue("
-    At post-ASCT, cfWGS agreed with clonoSEQ in {X}/{Y} ({XX}%) samples and with MFC in {Xp}/{Yp} ({XXp}%). 
-    clonoSEQ vs. MFC were concordant in {Z}/{W} ({YY}%) paired samples. 
-    Of the discordant post-ASCT samples, cfWGS was positive/ clonoSEQ negative in {n_cf_pos_cl_neg} cases and negative/ clonoSEQ positive in {m_cf_neg_cl_pos}. 
-    At the 1-year maintenance timepoint, cfWGS agreed with clonoSEQ in {A}/{B} ({AA}%) samples and with MFC in {C}/{D} ({BB}%). 
-    The PPV and NPV of cfWGS were {sprintf('%.0f',p*100)}% and {sprintf('%.0f',q*100)}% at post-ASCT, and {sprintf('%.0f',p2*100)}% and {sprintf('%.0f',q2*100)}% at maintenance. 
-    In the non-frontline cohort, sensitivity and specificity of cfWGS were {sprintf('%.0f',stats_out$nonfront_sens*100)}% and {sprintf('%.0f',stats_out$nonfront_spec*100)}%, with an overall positivity rate of {stats_out$nonfront_pos %>% filter(Test=='BM_zscore_only_detection_rate_call') %>% summarise(sprintf('%.0f%%', 100*pos/tot)) %>% pull()}.
-  ")
-  
-  cat(para)
-}
-
 
 # Assay-specific PPV/NPV summaries.
 # These compare cfWGS to each clinical assay separately, rather than to the
@@ -1542,7 +1406,6 @@ get_ppvnpv <- function(df, landmark_value, truth_col) {
   c(PPV = out$PPV, NPV = out$NPV)
 }
 
-fmt_pct0 <- function(x) ifelse(is.na(x), "NA", sprintf("%.0f%%", 100*x))
 
 # ---- pull numbers ----
 # Post-ASCT
@@ -1553,15 +1416,7 @@ ppvnpv_post_mfc <- get_ppvnpv(dat, "Post_ASCT", "Flow_Binary")      # MFC
 ppvnpv_maint_seq <- get_ppvnpv(dat, "Maintenance", "Adaptive_Binary")
 ppvnpv_maint_mfc <- get_ppvnpv(dat, "Maintenance", "Flow_Binary")
 
-para2 <- glue("
-To further assess assay performance, we examined concordance between cfWGS and clinical MRD tests at each time point. 
-At post-ASCT, cfWGS demonstrated high concordance with both clinical assays, agreeing with clonoSEQ in {X}/{Y} ({XX}%) samples (PPV = {fmt_pct0(ppvnpv_post_seq['PPV'])}, NPV = {fmt_pct0(ppvnpv_post_seq['NPV'])}) 
-and with MFC in {Xp}/{Yp} ({XXp}%) samples (PPV = {fmt_pct0(ppvnpv_post_mfc['PPV'])}, NPV = {fmt_pct0(ppvnpv_post_mfc['NPV'])}). 
-At the 1-year maintenance timepoint, cfWGS agreed with clonoSEQ in {A}/{B} ({AA}%) samples (PPV = {fmt_pct0(ppvnpv_maint_seq['PPV'])}, NPV = {fmt_pct0(ppvnpv_maint_seq['NPV'])}) 
-and with MFC in {C}/{D} ({BB}%) samples (PPV = {fmt_pct0(ppvnpv_maint_mfc['PPV'])}, NPV = {fmt_pct0(ppvnpv_maint_mfc['NPV'])}).
-")
 
-cat(para2)
 
 
 # Export BM-informed concordance helper tables used for review and source-data
@@ -2089,30 +1944,10 @@ writexl::write_xlsx(
 )
 
 
-# Format a prose check using the rounded percentages reported in the manuscript.
-fmt_pct <- function(x) sprintf("%.0f%%", 100*x)
 
-post_sentence <- glue(
-  "At post-ASCT, confirmatory cfDNA-based MRD demonstrated strong concordance with clonoSEQ ",
-  "({ct_post_Clono$Agree}/{ct_post_Clono$N}, {fmt_pct(ct_post_Clono$Concordance)}; ",
-  "PPV {fmt_pct(ct_post_Clono$PPV)}, NPV {fmt_pct(ct_post_Clono$NPV)}) ",
-  "and moderate concordance with MFC ",
-  "({ct_post_Flow$Agree}/{ct_post_Flow$N}, {fmt_pct(ct_post_Flow$Concordance)}; ",
-  "PPV {fmt_pct(ct_post_Flow$PPV)}, NPV {fmt_pct(ct_post_Flow$NPV)})."
-)
 
-post_sentence
 
-maint_sentence <- glue(
-  "At maintenance, confirmatory cfDNA-based MRD demonstrated strong concordance with clonoSEQ ",
-  "({ct_maint_Clono$Agree}/{ct_maint_Clono$N}, {fmt_pct(ct_maint_Clono$Concordance)}; ",
-  "PPV {fmt_pct(ct_maint_Clono$PPV)}, NPV {fmt_pct(ct_maint_Clono$NPV)}) ",
-  "and moderate concordance with MFC ",
-  "({ct_maint_Flow$Agree}/{ct_maint_Flow$N}, {fmt_pct(ct_maint_Flow$Concordance)}; ",
-  "PPV {fmt_pct(ct_maint_Flow$PPV)}, NPV {fmt_pct(ct_maint_Flow$NPV)})."
-)
 
-maint_sentence
 
 # Rebuild long-format confusion-matrix rows for the blood/cfDNA panels.
 ct_to_long <- function(ct_row, label){
@@ -2401,30 +2236,10 @@ writexl::write_xlsx(
 )
 
 
-# Format a prose check using the rounded percentages reported in the manuscript.
-fmt_pct <- function(x) sprintf("%.0f%%", 100*x)
 
-post_sentence <- glue(
-  "At post-ASCT, confirmatory cfDNA-based MRD demonstrated strong concordance with clonoSEQ ",
-  "({ct_post_Clono$Agree}/{ct_post_Clono$N}, {fmt_pct(ct_post_Clono$Concordance)}; ",
-  "PPV {fmt_pct(ct_post_Clono$PPV)}, NPV {fmt_pct(ct_post_Clono$NPV)}) ",
-  "and moderate concordance with MFC ",
-  "({ct_post_Flow$Agree}/{ct_post_Flow$N}, {fmt_pct(ct_post_Flow$Concordance)}; ",
-  "PPV {fmt_pct(ct_post_Flow$PPV)}, NPV {fmt_pct(ct_post_Flow$NPV)})."
-)
 
-post_sentence
 
-maint_sentence <- glue(
-  "At maintenance, confirmatory cfDNA-based MRD demonstrated strong concordance with clonoSEQ ",
-  "({ct_maint_Clono$Agree}/{ct_maint_Clono$N}, {fmt_pct(ct_maint_Clono$Concordance)}; ",
-  "PPV {fmt_pct(ct_maint_Clono$PPV)}, NPV {fmt_pct(ct_maint_Clono$NPV)}) ",
-  "and moderate concordance with MFC ",
-  "({ct_maint_Flow$Agree}/{ct_maint_Flow$N}, {fmt_pct(ct_maint_Flow$Concordance)}; ",
-  "PPV {fmt_pct(ct_maint_Flow$PPV)}, NPV {fmt_pct(ct_maint_Flow$NPV)})."
-)
 
-maint_sentence
 
 
 
@@ -2600,20 +2415,6 @@ build_metrics_frontline_vs_nonfront <- function(dat, pred_regex = "_call$") {
   bind_rows(out) %>% arrange(Cohort, Timepoint, Pred_Label, Comparator)
 }
 
-## ── Sentence helper (handles both cohorts) ─────────────────────────────
-row_to_sentence <- function(row) {
-  tp_phrase <- if (row$Cohort == "Frontline") {
-    if (row$Timepoint == "Maintenance") "At maintenance"
-    else if (row$Timepoint == "Post_ASCT") "At post-ASCT"
-    else glue("At {row$Timepoint}")
-  } else {
-    "Overall in the non-frontline cohort"
-  }
-  glue(
-    "{tp_phrase}, {row$Pred_Label} showed concordance with {row$Comparator} ",
-    "({row$Agree_str}, {row$Conc_pct}; PPV {row$PPV_pct}, NPV {row$NPV_pct})."
-  )
-}
 
 # Build the final Supplementary Table 10 metrics table.
 metrics_tbl <- build_metrics_frontline_vs_nonfront(dat)

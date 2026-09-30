@@ -2420,9 +2420,8 @@ cat("  ✓ Saved blood-subset sensitivity barplot\n\n")
 #   top of the script. The blocks below compute descriptive 24-month RFS,
 #   median RFS, Cox HRs, rank correlations, and power diagnostics at the
 #   one-year-maintenance and post-ASCT landmarks. These summaries feed the ED6B
-#   and ED8B hazard-ratio source tables/plots generated later in this script and
-#   print prose checks to the console. They are not the
-#   non-frontline/test-cohort time-window analysis; that begins in the separate
+#   and ED8B hazard-ratio source tables/plots generated later in this script.
+#   The non-frontline/test-cohort time-window analysis begins in the separate
 #   "Time-window prediction performance in Non-frontline cohort" section below.
 
 # Refactored landmark-summary helpers -------------------------------------------------
@@ -2432,9 +2431,6 @@ cat("  ✓ Saved blood-subset sensitivity barplot\n\n")
 # model/timepoint. These helpers keep the same calculations but centralize the
 # repeated mechanics so the active command-line path is easier to audit.
 
-fmt_nr_months <- function(x) {
-  ifelse(is.na(x) | is.infinite(x), "NR", round(x, 1))
-}
 
 safe_spearman <- function(x, y) {
   ok <- stats::complete.cases(x, y)
@@ -2616,31 +2612,6 @@ build_landmark_progression_table <- function(survival_df,
   )
 }
 
-print_landmark_progression_sentence <- function(row, model_label) {
-  time_phrase <- if (row$Landmark == "1yr_maintenance") {
-    "After one year of maintenance therapy"
-  } else {
-    "At post-transplant"
-  }
-
-  cat(glue(
-    "{time_phrase}, among patients with {model_label} available (n={row$N_cfWGS}), ",
-    "{model_label} MRD-negative patients had {round(row$RFS24_cf_neg)}% relapse-free survival at 24 months ",
-    "versus {round(row$RFS24_cf_pos)}% for MRD-positive patients ",
-    "(HR = {round(row$HR_cf, 2)}; 95% CI [{round(row$CI_low_cf, 2)}-{round(row$CI_high_cf, 2)}]). ",
-    "Median RFS by {model_label} was {fmt_nr_months(row$MedRFS_cf_neg)} vs {fmt_nr_months(row$MedRFS_cf_pos)} months. ",
-    "For MFC (n={row$N_MFC}), MRD-negative patients had {round(row$RFS24_fl_neg)}% RFS at 24 months ",
-    "versus {round(row$RFS24_fl_pos)}% for MRD-positive patients ",
-    "(HR = {round(row$HR_fl, 2)}; 95% CI [{round(row$CI_low_fl, 2)}-{round(row$CI_high_fl, 2)}]). ",
-    "clonoSEQ (n={row$N_clonoSEQ}) showed HR = {round(row$HR_seq, 2)} ",
-    "(95% CI [{round(row$CI_low_seq, 2)}-{round(row$CI_high_seq, 2)}]). ",
-    "Continuous {model_label} probability had Spearman rho = {round(row$Spearman_prob, 2)} with time-to-event, ",
-    "compared with rho = {round(row$Spearman_flow, 2)} for flow cytometry. ",
-    "With {row$Events} events among {row$Patients} patients in this subset, the minimum detectable HR for 80% power is ",
-    "{round(row$HR_80pct, 1)} and estimated power for HR = 2.0 is {round(row$Power_HR2_pct, 1)}%. ",
-    "These analyses are descriptive and hypothesis-generating."
-  ), "\n\n", sep = "")
-}
 
 export_landmark_progression_table <- function(tbl, csv_name, rds_name) {
   write_csv(tbl, file.path(outdir, paste0(csv_name, date_tag, ".csv")))
@@ -2733,15 +2704,6 @@ if (isTRUE(use_refactored_landmark_summaries)) {
     require_easym = FALSE
   )
 
-  purrr::walk(seq_len(nrow(progression_metrics)), function(i) {
-    print_landmark_progression_sentence(progression_metrics[i, ], "BM-cfWGS")
-  })
-  purrr::walk(seq_len(nrow(progression_metrics_blood)), function(i) {
-    print_landmark_progression_sentence(progression_metrics_blood[i, ], "Blood-cfWGS")
-  })
-  purrr::walk(seq_len(nrow(progression_metrics_blood_combined)), function(i) {
-    print_landmark_progression_sentence(progression_metrics_blood_combined[i, ], "Blood-cfWGS combined model")
-  })
 
   export_landmark_progression_table(
     progression_metrics,
@@ -2762,7 +2724,7 @@ if (isTRUE(use_refactored_landmark_summaries)) {
 
 # Legacy comparison path removed:
 #   The previous manual landmark-summary implementation repeated the same
-#   survival, Cox, Spearman, power, prose, and export logic for BM, blood,
+#   survival, Cox, Spearman, power, and export logic for BM, blood,
 #   and combined blood models. The active helper implementation above now
 #   creates the same progression_metrics objects and exports used below.
 #   Historical copies remain in local or Git history if detailed audit is needed.
@@ -3056,7 +3018,7 @@ ms_copy_artifact(
 
 
 ### Now make time to relapse figure 
-df <- survival_df %>%                           # <- your tibble
+df <- survival_df %>%                           # <- the tibble
   # keep samples beyond baseline / diagnosis
   filter(!str_detect(timepoint_info, regex("Diagnosis|Baseline", TRUE))) %>%
   
@@ -3188,7 +3150,7 @@ p_prob <- ggplot(df, aes(months_before_event, BM_zscore_only_detection_rate_prob
 print(p_prob)
 
 ## Add the samples 
-# Make sure the outcome labels match your scales
+# Make sure the outcome labels match the scales
 df <- df %>% mutate(progress_status = factor(progress_status,
                                              levels = c("No relapse","Relapse")))
 
@@ -3643,7 +3605,7 @@ time_to_relapse_BM <- plot_df2
 
 
 ### Extended Data Figure 8E/8F blood-derived longitudinal and association panels
-df <- survival_df %>%                           # <- your tibble
+df <- survival_df %>%                           # <- the tibble
   # keep samples beyond baseline / diagnosis
   filter(!str_detect(timepoint_info, regex("Diagnosis|Baseline", TRUE))) %>%
   
@@ -3774,7 +3736,7 @@ p_prob <- ggplot(df, aes(months_before_event, Blood_zscore_only_sites_prob, grou
 print(p_prob)
 
 ### Add label 
-# Make sure the outcome labels match your scales
+# Make sure the outcome labels match the scales
 df <- df %>% mutate(progress_status = factor(progress_status,
                                              levels = c("No relapse","Relapse")))
 
@@ -3994,7 +3956,7 @@ spearman_res <- with(
 
 ## Check other metrics
 # 2A) pull out estimate + p‑value
-# A) including relapse samples (your current spearman_res)
+# A) including relapse samples (the current spearman_res)
 rho_all  <- spearman_res$estimate
 pval_all <- spearman_res$p.value
 
@@ -4776,7 +4738,7 @@ dat <- readRDS(dat_rds) %>%
 ##  Time-window prediction performance in Non-frontline cohort
 ################################################################################
 
-# 1) Your assays vector
+# 1) The assays vector
 assays <- c(
   EasyM        = "EasyM_reference_threshold_binary",
   Flow         = "Flow_Binary",
@@ -5231,77 +5193,22 @@ wins <- c(180, 365)
 summ_bm <- event_counts_BM %>%
   dplyr::filter(Window_days %in% wins) %>%
   dplyr::select(Window_days, Patients_relapsed = N_patients, Samples_relapsed = N_samples)
-txt_bm <- glue::glue(
-  "Among bone-marrow cfWGS samples, {summ_bm$Samples_relapsed[summ_bm$Window_days==180]} ",
-  "from {summ_bm$Patients_relapsed[summ_bm$Window_days==180]} patients relapsed within 180 days ",
-  "and {summ_bm$Samples_relapsed[summ_bm$Window_days==365]} ",
-  "from {summ_bm$Patients_relapsed[summ_bm$Window_days==365]} patients relapsed within 365 days."
-)
-cat(txt_bm, "\n")
 
-# B) Blood-only wording (matches results_blood denominators for the cfWGS_Blood rows)
+# B) Blood-only counts using the cfWGS_Blood evaluability denominators
 summ_blood <- event_counts_blood %>%
   dplyr::filter(Window_days %in% wins) %>%
   dplyr::select(Window_days, Patients_relapsed = N_patients, Samples_relapsed = N_samples)
-txt_blood <- glue::glue(
-  "Among blood cfWGS samples, {summ_blood$Samples_relapsed[summ_blood$Window_days==180]} ",
-  "from {summ_blood$Patients_relapsed[summ_blood$Window_days==180]} patients relapsed within 180 days ",
-  "and {summ_blood$Samples_relapsed[summ_blood$Window_days==365]} ",
-  "from {summ_blood$Patients_relapsed[summ_blood$Window_days==365]} patients relapsed within 365 days."
-)
-cat(txt_blood, "\n")
 
-# C) “Any cfWGS” wording = union of evaluable rows that have BM OR Blood assays
+# C) Union of evaluable rows with BM or blood cfWGS assays
 summ_any <- count_prospective_events_by_window(
   prospective_timewindow_labels,
   c(bm_col, blood_col),
   wins
 )
-txt_any <- glue::glue(
-  "In the test cohort, sampling times were heterogeneous, so we assessed each assay’s ",
-  "ability to predict progression within fixed time windows (180 and 365 days). ",
-  "Among cfWGS samples, {summ_any$N_samples[summ_any$Window_days==180]} ",
-  "from {summ_any$N_patients[summ_any$Window_days==180]} patients relapsed within 180 days ",
-  "and {summ_any$N_samples[summ_any$Window_days==365]} ",
-  "from {summ_any$N_patients[summ_any$Window_days==365]} patients relapsed within 365 days."
-)
-cat(txt_any, "\n")
 
-results_BM %>%
-  # pick the assays & windows you want to narrate
-  filter(Assay %in% c("cfWGS_BM", "Flow"), Window_days %in% c(180, 365)) %>%
-  # build a sentence for each row
-  rowwise() %>%
-  mutate(
-    sentence = glue(
-      "{Assay} at {Window_days}-day window detected {TP}/{TP + FN} progressors ",
-      "(sensitivity {percent(Sensitivity)}, specificity {percent(Specificity)})."
-    )
-  ) %>%
-  ungroup() %>%
-  # print them to the console
-  pull(sentence) %>%
-  cat(sep = "\n")
-
-## For blood
-results_blood %>%
-  # pick the assays & windows you want to narrate
-  filter(Assay %in% c("cfWGS_Blood", "Flow", "cfWGS_Blood_Combined"), Window_days %in% c(180, 365)) %>%
-  # build a sentence for each row
-  rowwise() %>%
-  mutate(
-    sentence = glue(
-      "{Assay} at {Window_days}-day window detected {TP}/{TP + FN} progressors ",
-      "(sensitivity {percent(Sensitivity)}, specificity {percent(Specificity)})."
-    )
-  ) %>%
-  ungroup() %>%
-  # print them to the console
-  pull(sentence) %>%
-  cat(sep = "\n")
 
 ## Get event counts 
-# define your windows of interest
+# define the windows of interest
 windows <- c(90, 180, 365, 730)
 
 # this will count, for each window:
@@ -5334,7 +5241,7 @@ sens_BM_df <- results_BM %>%
     Assay = factor(Assay, levels = c("cfWGS", "MFC"))
   )
 # ────────────────────────────────────────────────────────────────────────────
-# 2) Colours & theme (match your existing style)
+# 2) Colours & theme (match the existing style)
 # ────────────────────────────────────────────────────────────────────────────
 custom_cols <- c(
   "90 days"  = "#440154FF",
@@ -5734,29 +5641,6 @@ increase_stats2 <- increase_stats2 %>%
     max_before_prog_mo    = d2m(max_before_prog)
   )
 
-# ==== C) One-paragraph sentence  ====
-cat(glue(
-  "We analyzed {n_patients} patients (total {n_samples} samples) collected a median ",
-  "{sample_timing_stats$median_days_before} days (~{sample_timing_stats$median_days_before_mo} mo) before progression ",
-  "(IQR {sample_timing_stats$iqr_days_before} days, ~{sample_timing_stats$iqr_days_before_mo} mo; ",
-  "range {sample_timing_stats$min_days_before}–{sample_timing_stats$max_days_before} days, ",
-  "~{sample_timing_stats$min_days_before_mo}–{sample_timing_stats$max_days_before_mo} mo). ",
-  "The nadir detection probability occurred a median ",
-  "{nadir_timing_stats$median_nadir_days} days (~{nadir_timing_stats$median_nadir_mo} mo) before progression ",
-  "(IQR {nadir_timing_stats$iqr_nadir_days} days, ~{nadir_timing_stats$iqr_nadir_mo} mo; ",
-  "range {nadir_timing_stats$min_nadir_days}–{nadir_timing_stats$max_nadir_days} days, ",
-  "~{nadir_timing_stats$min_nadir_mo}–{nadir_timing_stats$max_nadir_mo} mo). ",
-  "From that nadir, the first increase occurred a median ",
-  "{increase_stats2$median_after_nadir} days (~{increase_stats2$median_after_nadir_mo} mo) later ",
-  "(IQR {increase_stats2$iqr_after_nadir} days, ~{increase_stats2$iqr_after_nadir_mo} mo; ",
-  "range {increase_stats2$min_after_nadir}–{increase_stats2$max_after_nadir} days, ",
-  "~{increase_stats2$min_after_nadir_mo}–{increase_stats2$max_after_nadir_mo} mo), ",
-  "which was a median {increase_stats2$median_before_prog} days ",
-  "(~{increase_stats2$median_before_prog_mo} mo) before IMWG-defined clinical progression ",
-  "(IQR {increase_stats2$iqr_before_prog} days, ~{increase_stats2$iqr_before_prog_mo} mo; ",
-  "range {increase_stats2$min_before_prog}–{increase_stats2$max_before_prog} days, ",
-  "~{increase_stats2$min_before_prog_mo}–{increase_stats2$max_before_prog_mo} mo).\n"
-))
 
 
 
@@ -5910,29 +5794,6 @@ increase_stats2 <- increase_stats2 %>%
     max_before_prog_mo    = d2m(max_before_prog)
   )
 
-# ==== C) One-paragraph sentence  ====
-cat(glue(
-  "We analyzed {n_patients} patients (total {n_samples} samples) collected a median ",
-  "{sample_timing_stats$median_days_before} days (~{sample_timing_stats$median_days_before_mo} mo) before progression ",
-  "(IQR {sample_timing_stats$iqr_days_before} days, ~{sample_timing_stats$iqr_days_before_mo} mo; ",
-  "range {sample_timing_stats$min_days_before}–{sample_timing_stats$max_days_before} days, ",
-  "~{sample_timing_stats$min_days_before_mo}–{sample_timing_stats$max_days_before_mo} mo). ",
-  "The nadir detection probability occurred a median ",
-  "{nadir_timing_stats$median_nadir_days} days (~{nadir_timing_stats$median_nadir_mo} mo) before progression ",
-  "(IQR {nadir_timing_stats$iqr_nadir_days} days, ~{nadir_timing_stats$iqr_nadir_mo} mo; ",
-  "range {nadir_timing_stats$min_nadir_days}–{nadir_timing_stats$max_nadir_days} days, ",
-  "~{nadir_timing_stats$min_nadir_mo}–{nadir_timing_stats$max_nadir_mo} mo). ",
-  "From that nadir, the first increase occurred a median ",
-  "{increase_stats2$median_after_nadir} days (~{increase_stats2$median_after_nadir_mo} mo) later ",
-  "(IQR {increase_stats2$iqr_after_nadir} days, ~{increase_stats2$iqr_after_nadir_mo} mo; ",
-  "range {increase_stats2$min_after_nadir}–{increase_stats2$max_after_nadir} days, ",
-  "~{increase_stats2$min_after_nadir_mo}–{increase_stats2$max_after_nadir_mo} mo), ",
-  "which was a median {increase_stats2$median_before_prog} days ",
-  "(~{increase_stats2$median_before_prog_mo} mo) before IMWG-defined clinical progression ",
-  "(IQR {increase_stats2$iqr_before_prog} days, ~{increase_stats2$iqr_before_prog_mo} mo; ",
-  "range {increase_stats2$min_before_prog}–{increase_stats2$max_before_prog} days, ",
-  "~{increase_stats2$min_before_prog_mo}–{increase_stats2$max_before_prog_mo} mo).\n"
-))
 
 
 

@@ -118,7 +118,7 @@ combined_clinical_data_updated <- readr::read_csv(
 ##### First build the M4 clinical/lab table - updated May 2025
 #### SPORE and IMMAGINE are harmonized into this structure later in the script.
 
-# Set the path to your data folder
+# Set the path to the data folder
 data_path <- "M4_CMRG_Data/"
 
 # Step 1: Load the data files
@@ -174,7 +174,7 @@ translocations_old <- bone_marrow %>%
 
 ## Take more
 translocations <- bone_marrow %>%
-  # 1) pick only the cols you care about
+  # 1) pick only the cols needed for this analysis
   select(
     M4_id,
     INTENT,
@@ -186,7 +186,7 @@ translocations <- bone_marrow %>%
     HAS_NUMERICAL_ABNORMALITY, HAS_TRANSLOCATION, HAS_TRISOMY, HAS_MONOSOMY,
     TRISOMY_CHR3, TRISOMY_CHR7, TRISOMY_CHR9, TRISOMY_CHR15
   ) %>%
-  # 2) rename the 13q deletion to match your other DEL_ columns
+  # 2) rename the 13q deletion to match the other DEL_ columns
   rename(
     DEL_13 = CHROMOSOME_13_DEL
   ) %>%
@@ -194,13 +194,13 @@ translocations <- bone_marrow %>%
   mutate(
     across(
       c(
-        # all of your existing T_, DEL_, AMP_ cols
+        # all of the existing T_, DEL_, AMP_ cols
         starts_with("T_"),
         starts_with("DEL_"),
         starts_with("AMP_"),
-        # your HAS_ flags
+        # the HAS_ flags
         starts_with("HAS_"),
-        # the four chr-trisomy cols you asked for
+        # the four chromosome-trisomy columns
         TRISOMY_CHR3, TRISOMY_CHR7, TRISOMY_CHR9, TRISOMY_CHR15
       ),
       ~ case_when(
@@ -300,12 +300,12 @@ classified_translocations <- classified_translocations %>% filter(!is.na(PROCEDU
 ### Now get the timepoints from the dates 
 library(fuzzyjoin)
 
-# 1) Prep your translocation table
+# 1) Prep the translocation table
 ct2 <- classified_translocations %>%
   rename(Patient = M4_id) %>%
   mutate(PROCEDURE_DATE = as.Date(PROCEDURE_DATE))
 
-# 2) Prep your clinical samples table
+# 2) Prep the clinical samples table
 ccu_small <- combined_clinical_data_updated %>%
   select(
     Patient,
@@ -655,7 +655,7 @@ if (length(missing_lab_columns) > 0) {
 
 
 ### Add the timepoint if have from other table 
-# 1) Prep your translocation table
+# 1) Prep the translocation table
 ct2 <- labs_transformed %>%
   rename(Patient = M4_id) %>%
   mutate(PROCEDURE_DATE = as.Date(LAB_DATE))
@@ -1226,7 +1226,7 @@ SPORE_labs_joined <- full_join(SPORE_labs_joined, clinical_data_SPORE)
 
 SPORE_labs_joined$ECOG_SCORE <- as.numeric(SPORE_labs_joined$ECOG_SCORE)
 
-# 2) join onto your consolidated clinical table
+# 2) join onto the consolidated clinical table
 clinical_consolidated <- clinical_consolidated %>%
   full_join(SPORE_labs_joined)
 
@@ -1315,7 +1315,7 @@ demog_clean <- demographics %>%
   ) %>%
   select(Patient, AGE.demo, Gender.demo, AGE_GROUP.demo)
 
-# 2) Left-join them onto your clinical table, bringing in the “.demo” columns
+# 2) Left-join them onto the clinical table, bringing in the “.demo” columns
 clinical_filled <- clinical_consolidated %>%
   left_join(demog_clean, by = "Patient")
 

@@ -690,7 +690,7 @@ dat_base <- dat_base %>%
   mutate(Subtype = factor(Subtype))  # re-factor after conversion
 
 
-# 2. Define your final var lists
+# 2. Define the final var lists
 vars_cat <- c("Gender", "AGE_GROUP", "ISS_STAGE",
               "Cytogenetic_Risk", "Subtype", "ECOG_SCORE")
 
@@ -699,7 +699,7 @@ vars_cat <- c("Gender", "AGE_GROUP", "ISS_STAGE",
 
 # 2. Recode “Unknown” and “Unknown/Missing” to NA and drop them
 dat_base <- dat_base %>%
-  # 1) Turn all your cats into character
+  # 1) Convert categorical variables to character
   mutate(across(all_of(vars_cat), as.character)) %>%
   
   # 2) Replace "Unknown" or "Unknown/Missing" with NA
@@ -733,7 +733,7 @@ dat_base <- dat_base %>%
       TRUE                      ~ NA_character_
     ),
     
-    # 2. Fill only the NA entries in your original Cytogenetic_Risk
+    # 2. Fill only the NA entries in the original Cytogenetic_Risk
     Cytogenetic_Risk = coalesce(Cytogenetic_Risk, Cytogenetic_Risk_calc),
     
     # 3. (re)factor with the two levels

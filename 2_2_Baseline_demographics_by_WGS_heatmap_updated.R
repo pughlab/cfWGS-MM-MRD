@@ -370,7 +370,7 @@ deduplicate_spring2026_heatmap_baselines <- function(data, compartment) {
 metada_df_mutation_comparison <- read_combined_clinical_metadata_with_revision(
   "combined_clinical_data_updated_April2025.csv"
 ) %>%
-  # recreate the “clean” BAM key that all your joins rely on
+  # recreate the “clean” BAM key that all the joins rely on
   mutate(
     # Tumor_Sample_Barcode strips assay/library tokens and suffixes to match the
     # sample keys used by mutation/CNA/translocation intermediate tables.
@@ -534,7 +534,7 @@ screenshotter_df <- maf_subset@data %>%
   mutate(Mutation = paste(Reference_Allele, Tumor_Seq_Allele2, sep=">")) %>%
   distinct(Bam, Chromosome, Start_Position, Mutation)
 
-# 2. check your BAM‐name set
+# 2. check the BAM‐name set
 current_bams    <- read_csv("Cut bam names.csv")$Name %>% str_remove("\\.bam$") # some minor stylistic changes after archiving renaming (ie, - vs _)
 
 screenshot_bams <- screenshotter_df$Bam %>% str_remove("\\.bam$")
@@ -606,7 +606,7 @@ write_bed <- function(df, bam_name) {
             col_names = FALSE)
 }
 
-# then this will drop all your .bed files into bed_files/
+# then this will drop all the .bed files into bed_files/
 screenshotter_df %>% group_by(Bam) %>% group_walk(~ write_bed(.x, .y$Bam))
 
 
@@ -617,7 +617,7 @@ screenshotter_df <- maf_subset_blood@data %>%
   mutate(Mutation = paste(Reference_Allele, Tumor_Seq_Allele2, sep=">")) %>%
   distinct(Bam, Chromosome, Start_Position, Mutation)
 
-# 2. check your BAM‐name set
+# 2. check the BAM‐name set
 current_bams    <- read_csv("Cut bam names.csv")$Name %>% str_remove("\\.bam$") # some minor stylistic changes after archiving renaming (ie, - vs _)
 
 screenshot_bams <- screenshotter_df$Bam %>% str_remove("\\.bam$")
@@ -667,7 +667,7 @@ write_bed <- function(df, bam_name) {
             col_names = FALSE)
 }
 
-# then this will drop all your .bed files into bed_files/
+# then this will drop all the .bed files into bed_files/
 screenshotter_df %>% group_by(Bam) %>% group_walk(~ write_bed(.x, .y$Bam))
 
 
@@ -1145,7 +1145,7 @@ saveRDS(combined_data_heatmap_blood, file = "combined_data_heatmap_blood_Sep2025
 
 
 ##### Export iGV tables
-# 2. figure out exactly which barcodes & genes are on your heatmap
+# 2. figure out exactly which barcodes & genes are on the heatmap
 final_BM_barcodes    <- combined_data_heatmap_BM$Tumor_Sample_Barcode ## defined later
 final_blood_barcodes <- combined_data_heatmap_blood$Tumor_Sample_Barcode
 final_genes          <- intersect(
@@ -1162,7 +1162,7 @@ blood_filt <- maf_subset_blood@data %>%
   filter(Tumor_Sample_Barcode %in% final_blood_barcodes,
          Hugo_Symbol            %in% final_genes)
 
-# 4. add back your original BAM name
+# 4. add back the original BAM name
 bm_filt    <- bm_filt %>%
   left_join(metada_df_mutation_comparison %>% 
               select(Bam_clean_tmp, Bam),
@@ -1263,7 +1263,7 @@ keep_blood <- blood_cols[blood_pids %in% keep_patients & grepl("Baseline|Diagnos
 all_cols <- base::union(keep_bm, keep_blood)
 pre_order_cols <- all_cols  
 
-# 3) subset your matrices
+# 3) subset the matrices
 heatmap_matrix_BM_subset <- heatmap_matrix_BM[, keep_bm, drop = FALSE]
 heatmap_matrix_blood_subset <- heatmap_matrix_blood[, keep_blood, drop = FALSE]
 
@@ -1354,7 +1354,7 @@ ord_df <- data.frame(
   Paired        = extract_pid(all_cols) %in% paired_pids,
   stringsAsFactors = FALSE
 ) %>%
-  filter(!is.na(Cohort)) %>%                            # drop anything outside your two cohorts
+  filter(!is.na(Cohort)) %>%                            # drop anything outside the two analysis cohorts
   arrange(Cohort, desc(Paired), desc(TumourFraction))  # within each cohort: paired first, by TF
 
 col_order      <- ord_df$Sample
@@ -1365,7 +1365,7 @@ ord_df <- ord_df %>%
   mutate(
     patient = sub("_Baseline$", "", Sample),
     
-    # map your 'Cohort' to the swim-plot cohort names
+    # map the 'Cohort' to the swim-plot cohort names
     cohort  = recode(Cohort,
                      "Training Cohort" = "Front-line cohort",
                      "Test Cohort"    = "Non-front-line cohort"),
@@ -1396,7 +1396,7 @@ col_cohort_ord <- factor(
   labels = c("Training Cohort", "Test Cohort")
 )
 
-# 3) re‐order your matrices
+# 3) re‐order the matrices
 bm_mat    <- bm_mat   [, col_order, drop=FALSE]
 cfDNA_mat <- cfDNA_mat[, col_order, drop=FALSE]
 all_cols  <- col_order
@@ -1460,7 +1460,7 @@ write_csv(
 # 4) make a short label vector for the bottom
 patient_labels <- extract_pid(all_cols)
 
-# 5) re‐define your colour lookup
+# 5) re‐define the colour lookup
 pal_mut <- c(
   Truncating  = "#d73027", Missense    = "#fc8d59",
   Splice_Site = "#fee090", Other       = "#ffffbf",
@@ -3324,61 +3324,11 @@ saveRDS(supp_concordance_summary,   out_rds)
 
 
 
-####### Supplementary Table 2 sheet A support and narrative audit summaries
-### Role in manuscript:
-###   This tail section contains two different types of work:
-###   1. Console-only narrative summaries that help audit/interpret baseline
-###      concordance results. These printed paragraphs are not manuscript
-###      source files.
-###   2. The active disease-associated feature catalog exported below and staged
-###      for Supplementary Table 2 sheet A. `STABLE1A` remains the historical
-###      artifact-routing ID used by ms_copy_artifact().
 
-# --- Step 8. Generate Summary Paragraphs -------------------------------------
-# Example paragraphs (you can further modify the text based on your desired style)
 
-# Mutation paragraph example:
-mutation_paragraph <- with(mutation_summary, {
-  # For each timepoint and TF category, report:
-  paste0("For BM mutations at ", timepoint, " with ", TF_category, " samples (n=", n_samples, 
-         "): Out of a total of ", total_BM_mut, " mutations identified in BM, ", total_intersect, 
-         " were also detected in cfDNA (concordance = ", round(avg_overlap*100,1), 
-         "%). There were ", total_blood_only, " mutations found exclusively in cfDNA, representing a false positive rate of ", 
-         round(false_positive_rate,1), "%. The average tumor fraction was ", round(avg_TF_BM*100,1),
-         "% in BM and ", round(avg_TF_blood*100,1), "% in cfDNA."
-  )
-})
 
-cat("\n--- Mutation Summary Paragraphs ---\n")
-cat(paste(mutation_paragraph, collapse = "\n"), "\n\n")
 
-# Translocation paragraph example:
-trans_paragraph <- with(trans_summary, {
-  paste0("For translocations at ", timepoint, " with ", TF_category, " samples (n=", n_samples, 
-         "): Out of ", total_trans_BM, " translocation calls in BM, ", total_trans_intersect, 
-         " were concordantly detected in cfDNA (concordance = ", round(avg_trans_overlap*100,1), 
-         "%). There were ", total_trans_blood_only, " cfDNA-only calls (false positive rate = ", 
-         round(false_positive_rate,1), "%). The average tumor fractions were ", round(avg_TF_BM*100,1),
-         "% (BM) and ", round(avg_TF_blood*100,1), "% (cfDNA)."
-  )
-})
 
-cat("--- Translocation Summary Paragraphs ---\n")
-cat(paste(trans_paragraph, collapse = "\n"), "\n\n")
-
-# CNA paragraph example:
-CNA_paragraph <- with(CNA_summary, {
-  paste0("For CNAs at ", timepoint, " with ", TF_category, " samples (n=", n_samples, 
-         "): Out of ", total_CNA_BM, " CNA calls in BM, ", total_CNA_intersect, 
-         " were also observed in cfDNA (concordance = ", round(avg_CNA_overlap*100,1), 
-         "%). There were ", total_CNA_blood_only, " cfDNA-only calls (false positive rate = ", 
-         round(false_positive_rate,1), "%). Average tumor fractions were ", round(avg_TF_BM*100,1),
-         "% in BM and ", round(avg_TF_blood*100,1), "% in cfDNA."
-  )
-})
-
-cat("--- CNA Summary Paragraphs ---\n")
-cat(paste(CNA_paragraph, collapse = "\n"), "\n")
 
 
 # --- Global Percentages for Baseline Samples with High Tumor Fraction ---
@@ -3392,8 +3342,6 @@ percent_BM_highTF <- sum(baseline_BM$Tumor_Fraction > 0.05, na.rm = TRUE) / nrow
 # Calculate percentage of baseline cfDNA samples with tumor fraction > 5%
 percent_cfDNA_highTF <- sum(baseline_cfDNA$Tumor_Fraction > 0.05, na.rm = TRUE) / nrow(baseline_cfDNA) * 100
 
-cat("\nGlobally, at Baseline, ", round(percent_BM_highTF,1), 
-    "% of BM samples and ", round(percent_cfDNA_highTF,1), "% of cfDNA samples have high tumor fractions (>5%).\n")
 
 # --- Compute Median Tumor Fraction and Range at Baseline ---
 median_TF_BM <- median(baseline_BM$Tumor_Fraction, na.rm = TRUE) * 100
@@ -3402,11 +3350,6 @@ range_TF_BM <- range(baseline_BM$Tumor_Fraction, na.rm = TRUE) * 100
 median_TF_cfDNA <- median(baseline_cfDNA$Tumor_Fraction, na.rm = TRUE) * 100
 range_TF_cfDNA <- range(baseline_cfDNA$Tumor_Fraction, na.rm = TRUE) * 100
 
-# --- Print the Summary ---
-cat("\nAt baseline, the median tumor fraction estimated by ichorCNA was ", 
-    round(median_TF_BM,1), "% (range ", round(range_TF_BM[1],1), "-", round(range_TF_BM[2],1),
-    "%) in BM and ", round(median_TF_cfDNA,1), "% (range ", round(range_TF_cfDNA[1],1), "-",
-    round(range_TF_cfDNA[2],1), "%) in cfDNA.\n")
 
 
 # Filter for patients with High Tumor Fraction (>5%) in BM and cfDNA
@@ -3434,9 +3377,6 @@ cfDNA_high_TF_with_mut <- high_TF_cfDNA %>%
   pull(percent_with_mut)
 
 # Print the results
-cat("In patients with tumor fractions of >5%,",
-    round(BM_high_TF_with_mut, 1), "% demonstrated MM-associated mutations in BM, and",
-    round(cfDNA_high_TF_with_mut, 1), "% in cfDNA.\n")
 
 
 
@@ -3848,37 +3788,6 @@ print(discord_tbl, n = Inf)
 ###############################################################################
 ##  C.  COHORT × TF‑BAND SUMMARY  ----------------------------------------------
 ###############################################################################
-# Mutation summary is already in `mutation_summary`
-# Add a compact paragraph column you can copy‑paste into the manuscript
-mutation_summary <- mutation_summary |>
-  mutate(
-    blurb = glue::glue(
-      "{cohort} / {TF_band} ({TP}; n={n_samples}): ",
-      "{round(avg_overlap*100,1)}% mutation concordance ",
-      "(BM only {total_BM_only}, cfDNA only {total_CF_only}, FPR={round(fpr,1)}%)."
-    )
-  )
-
-# CNA & translocation summaries already computed → add similar blurbs
-CNA_summary <- CNA_summary |>
-  mutate(
-    blurb = glue::glue(
-      "{cohort} / {TF_band} ({TP}; n={n_samples}): ",
-      "{round(avg_overlap*100,1)}% CNA concordance ",
-      "(BM only {BM_only}, cfDNA only {CF_only}, FPR={round(fpr,1)}%)."
-    )
-  )
-
-trans_summary <- trans_summary |>
-  mutate(
-    blurb = glue::glue(
-      "{cohort} / {TF_band} ({TP}; n={n_samples}): ",
-      "{round(avg_overlap*100,1)}% translocation concordance ",
-      "(BM only {BM_only}, cfDNA only {CF_only}, FPR={round(fpr,1)}%)."
-    )
-  )
-
-###############################################################################
 ##  D.  PER‑FEATURE FISH vs WGS METRICS  ---------------------------------------
 ###############################################################################
 # `trans_fish_summary` and `cna_fish_summary` were built above.
@@ -3908,17 +3817,6 @@ ggplot(merged_mut,
   theme_bw() +
   theme(legend.position = "top")
 
-
-###############################################################################
-##  F.  CITE IN THE MANUSCRIPT  -----------------------------------------
-###############################################################################
-cat("\n-----------------------------\nSUMMARY BLURBS\n-----------------------------\n")
-cat("\nMUTATIONS:\n")
-cat(paste(mutation_summary$blurb, collapse = "\n"), "\n")
-cat("\nCNAs:\n")
-cat(paste(CNA_summary$blurb, collapse = "\n"), "\n")
-cat("\nTRANSLOCATIONS:\n")
-cat(paste(trans_summary$blurb, collapse = "\n"), "\n")
 
 cat("\nSee `discord_tbl` for a list of every discordant sample and the reason ",
     "(low BM‑TF vs low cfDNA‑TF).  Use `fish_vs_wgs` for per‑feature sensitivity ",

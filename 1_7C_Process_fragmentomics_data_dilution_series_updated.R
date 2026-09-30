@@ -125,7 +125,7 @@ clean_sample <- function(x) {
 # dilution percentage (input tumour-fraction level), rather than for an
 # assay-derived limit of detection. No clinical response comparisons are run.
 #
-# Point these to your *dilution-series* folders:
+# Point these to the *dilution-series* folders:
 
 # 1a) Nucleosome-accessibility input (cfWGS for dilution series)
 nuc_input.dir <- file.path("Fragmentomics_data", "Dilution_series")

@@ -578,7 +578,7 @@ overall_stats <- overlap_for_stats %>%
   )
 print(overall_stats)
 
-# 4) Summary by cohort (replace 'Cohort' with your actual cohort column name)
+# 4) Summary by cohort (replace 'Cohort' with the actual cohort column name)
 stats_by_cohort <- overlap_for_cohort_stats %>%
   group_by(Cohort) %>%
   summarise(

@@ -459,7 +459,7 @@ if (!is.null(cb_frame_rds)) {
 stopifnot(all(c("chrom","start","end","band") %in% names(cyto)))
 
 ## ---- Build GRanges from ichorCNA segments (wide) ----
-# Expect first 4 columns: chr, start, end, arm (your ichor pipeline wrote this)
+# Expect first 4 columns: chr, start, end, arm (ichorCNA pipeline output)
 need_cols <- c("chr","start","end","arm")
 if (!all(need_cols %in% names(combined_seg_data))) {
   stop("combined_seg_data must have columns: ", paste(need_cols, collapse = ", "))

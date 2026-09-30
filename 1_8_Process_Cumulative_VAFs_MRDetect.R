@@ -1222,7 +1222,7 @@ Merged_MRDetect_zscore %>%
 ### Now Process Further
 ### First BM Muts
 
-# 1) Start from your z-scored MRDetect table
+# 1) Start from the z-scored MRDetect table
 df <- Merged_MRDetect_zscore %>%
   filter(plotting_type == "Matched_plasma",
          Mut_source      == "BM_cells",
@@ -1525,7 +1525,7 @@ readr::write_csv(
 # ──────────────────────────────────────────────────────────────────────────────
 ### Next for blood-derived muts
 #Merged_MRDetect_zscore <- readRDS(file = "MRDetect_output_winter_2025/Processed_R_outputs/cfWGS_Winter2025All_MRDetect_with_Zscore_Sep2025.rds")
-# 1) Start from your z-scored MRDetect table
+# 1) Start from the z-scored MRDetect table
 df <- Merged_MRDetect_zscore %>%
   filter(plotting_type == "Matched_plasma",
          Mut_source      == "Blood",
@@ -1608,7 +1608,7 @@ start_dates <- df %>%
 combined_data_plot <- df %>%
   left_join(start_dates, by = c("Sample_ID", "Sample_ID_Bam", "Patient"))
 
-# 6) Flag “Good_baseline_sample” from your All_feature_data
+# 6) Flag “Good_baseline_sample” from All_feature_data
 good_pts <- All_feature_data %>%
   filter(Sample_type == "Blood_plasma_cfDNA",
          Evidence_of_Disease == 1,
@@ -1719,7 +1719,7 @@ readr::write_csv(
 combined_data_plot <- df %>%
   left_join(start_dates, by = c("Sample_ID", "Sample_ID_Bam", "Patient"))
 
-# 6) Flag “Good_baseline_sample” from your All_feature_data
+# 6) Flag “Good_baseline_sample” from All_feature_data
 good_pts <- All_feature_data %>%
   filter(Sample_type == "Blood_plasma_cfDNA",
          Evidence_of_Disease == 1,

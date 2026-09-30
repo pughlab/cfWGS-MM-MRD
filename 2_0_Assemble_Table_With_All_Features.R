@@ -1120,7 +1120,7 @@ cfWGS_Clinical_MRD_filled <- cfWGS_Clinical_MRD_filled %>%
 # compare matrix-specific cfWGS MRD performance.
 # --- 1. Make a “BM” lookup table -----------------------------
 tmp_bm <- MRD_cfWGS_BM %>% filter(timepoint_info %in% c("Baseline", "Diagnosis")) %>% filter(Sample_ID != "SPORE_0009_T3_BM_cells") %>% #have better baseline
-  # the columns you care about)
+  # the columns needed for this analysis)
   select(
     Patient,
     Date  = Date_of_sample_collection_Sample_ID_Bam,
@@ -1154,7 +1154,7 @@ tmp_blood <- MRD_cfWGS_blood %>% filter(timepoint_info %in% c("Baseline", "Diagn
   ) %>%
   distinct()
 
-#  Parse the Date columns in your look-up tables
+#  Parse the Date columns in the look-up tables
 tmp_bm <- tmp_bm %>%
   mutate(Date = as.Date(Date)) 
 
@@ -1175,7 +1175,7 @@ bm_dups
 blood_dups
 
 
-# --- 3. Join both into your clinical table ------------------
+# --- 3. Join both into the clinical table ------------------
 # Ensure all Date columns are of type Date
 cfWGS_Clinical_MRD_filled <- cfWGS_Clinical_MRD_filled %>%
   mutate(Date = as.Date(Date))
@@ -1315,7 +1315,7 @@ date_comparison <- cfWGS_Clinical_MRD_filled %>%
     by = "Sample_Code"
   ) %>%
   mutate(
-    # coerce your cleaned date to Date
+    # coerce the cleaned date to Date
     Cleaned_Date   = as.Date(Cleaned_Date),
     # calculate days difference
     Days_Difference = as.numeric(Date - Cleaned_Date)
@@ -1380,7 +1380,7 @@ M4_processing_log_dates <- M4_processing_log_dates %>%
 ## Recode VA-07 since 05 was actually relapse timepoint 
 M4_processing_log_dates <- M4_processing_log_dates %>%
   mutate(
-    # define your condition once
+    # define the condition once
     is_va07_05 = Patient == "VA-07" & Timepoint == "05",
     
     # change Timepoint where needed
@@ -1394,7 +1394,7 @@ M4_processing_log_dates <- M4_processing_log_dates %>%
 ## Take the Date value for labs since may have been typos in processing log 
 # Update NA dates or sample codes in cfWGS_Clinical_MRD_filled with values from M4_processing_log_dates
 cfWGS_Clinical_MRD_filled <- cfWGS_Clinical_MRD_filled %>%
-  # 1) fix types in your main table
+  # 1) fix types in the main table
   mutate(
     Patient     = as.character(Patient),
     Timepoint   = as.character(Timepoint),
@@ -1402,7 +1402,7 @@ cfWGS_Clinical_MRD_filled <- cfWGS_Clinical_MRD_filled %>%
   ) %>%
   left_join(
     M4_processing_log_dates %>%
-      # 2) also fix types in your lookup
+      # 2) also fix types in the lookup
       mutate(
         Patient     = as.character(Patient),
         Timepoint   = as.character(Timepoint),
@@ -1412,7 +1412,7 @@ cfWGS_Clinical_MRD_filled <- cfWGS_Clinical_MRD_filled %>%
       distinct(Patient, Timepoint, .keep_all = TRUE) %>%
       select(Patient, Timepoint, Cleaned_Date, Sample_Code),
     by     = c("Patient", "Timepoint"),
-    suffix = c("", ".log")   # keeps your original Sample_Code, brings in Sample_Code.log
+    suffix = c("", ".log")   # keeps the original Sample_Code, brings in Sample_Code.log
   ) %>%
   mutate(
     # 3a) fill in Date from Cleaned_Date only when Date is NA
@@ -1587,7 +1587,7 @@ write.csv(cfWGS_Clinical_MRD_filled, file = "cfWGS clinical MRD values with time
 # These columns are retained as continuous covariates for downstream modeling
 # and correlation analyses.
 
-# 1) Read in your fragmentomics + cfWGS data
+# 1) Read in the fragmentomics + cfWGS data
 ##### Ensure is correct with everything
 frag <- read_csv("Results_Fragmentomics/Key_fragmentomics_data_updated2.csv")
 ## Filter the frag df 
@@ -1656,7 +1656,7 @@ frag_small_unique <- frag_small %>%
 
 
 
-# 3) Join onto your clinical MRD table
+# 3) Join onto the clinical MRD table
 cfWGS_Clinical_MRD_filled <- cfWGS_Clinical_MRD_filled %>%
   left_join(
     frag_small_unique
@@ -1797,7 +1797,7 @@ dups <- cfWGS_dedup %>%
 #### Add WGS features from 1_5
 # These columns include tumor fraction, arm-level CNA, IgH translocations,
 # mutation summaries, and the composite WGS evidence-of-disease flag.
-# 1. From your WGS feature table, select the key and all of the WGS columns you care about
+# 1. From the WGS feature table, select the key and all of the WGS columns needed for this analysis
 wgs_subset <- All_feature_data %>%
   select(
     Patient,
@@ -1813,7 +1813,7 @@ wgs_subset <- All_feature_data %>%
     Mut_identified, Mut_genes, Mut_highest_VAF, Mut_type, Evidence_of_Disease
   )
 
-# 2. Rename them with a “WGS_” prefix so they don’t overwrite your clinical calls
+# 2. Rename them with a “WGS_” prefix so they don’t overwrite the clinical calls
 wgs_prefixed <- wgs_subset %>%
   rename_with(
     ~ paste0("WGS_", .),
@@ -1922,7 +1922,7 @@ joined2 <- joined %>%
   ) %>%
   select(-Patient.x, -Patient.y, -Timepoint.x, -Timepoint.y)
 
-# 2. define your blocks
+# 2. define the blocks
 id_cols      <- c("Patient", "Timepoint", "Sample_Code", "timepoint_info",
                   "Date", "Date_of_sample_collection", "AGE", "Gender", "AGE_GROUP")
 
@@ -2197,7 +2197,7 @@ first_non_na <- function(x) {
 }
 
 joined_consolidated <- joined_with_counts %>%
-  # normalize your “R-” codes up front
+  # normalize the “R-” codes up front
   mutate(
     Timepoint   = str_replace(Timepoint,   "^R-$", "R"),
     Sample_Code = str_replace(Sample_Code, "^R-$", "R")
@@ -2285,7 +2285,7 @@ pre_cleanup_sample_identity_map <- pre_cleanup_sample_identity_map %>%
 
 ### Do a bit more cleaning for duplicate or missing timepoints
 
-# 1) two lookup tables from your clinical master (de-duplicated if needed)
+# 1) two lookup tables from the clinical master (de-duplicated if needed)
 cc_by_info <- combined_clinical_data_updated %>% 
   select(Patient, timepoint_info, 
          TP_info = Timepoint, 
@@ -2369,7 +2369,7 @@ patients_with_zscores <- joined_clean2 %>%
 # overwritten.
 missing_tumor_fraction <- read.csv("Missing_tumor_fraction.csv")
 
-# 3) join back onto dat and fill your two WGS‐tumor‐fraction columns
+# 3) join back onto dat and fill the two WGS‐tumor‐fraction columns
 joined_clean2 <- joined_clean2 %>%
   # join in the new BM / blood TF values
   left_join(
@@ -2806,7 +2806,7 @@ summ_by_group <- function(df, count_col, evid_col) {
 
 # ---- 2) Blood: compute cutoff, build relaxed evidence -------------------------
 
-# Column names in your table:
+# Column names in the table:
 COUNT_BLOOD <- "Blood_Mutation_Count"
 EVID_BLOOD  <- "WGS_Evidence_of_Disease_Blood_plasma_cfDNA"  # 0/1
 
@@ -3672,7 +3672,7 @@ filled_df %>%
 # figures or tables, and downstream scripts should not depend on the objects
 # created in this section.
 
-# 1) Define your “lab” columns
+# 1) Define the “lab” columns
 lab_vars <- c(
   "Albumin", "B2_micro", "Calcium", "Creatinine", "Hemoglobin", "LDH",
   "IgA", "IgG", "IgM", "Kappa", "Kappa_Lambda_Ratio", "Lambda", "M_Protein"

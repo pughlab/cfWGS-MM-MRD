@@ -5,8 +5,7 @@
 #   Copy-number-based assessment of emergent subclonal CNA events between
 #   paired baseline and relapse cfDNA WGS samples (30-40x). Identifies CNAs
 #   present at relapse but absent (or sub-threshold) at baseline, generating
-#   per-patient longitudinal CNA plots, an emergent-event summary table, and
-#   plain-language sentences for the manuscript Results section.
+#   per-patient longitudinal CNA plots and an emergent-event summary table.
 #
 # Inputs:
 #   - Jan2025_exported_data/All_feature_data_Sep2025_updated2.rds
@@ -24,7 +23,6 @@
 #       (cohort-expansion evaluability, calls, changes, and summary tables)
 #   - Final Tables and Figures/Tumor_fraction_summary_*.csv
 #       (auxiliary per-patient tumour-fraction summaries)
-#   - Printed text: auto-generated manuscript sentences (stdout)
 #
 # Units of analysis:
 #   - CNA event tables contain one row per patient, progression sample, and CNA
@@ -51,8 +49,8 @@
 #
 # Manuscript-use boundary:
 #   The emergent/gained/lost CNA tables are the manuscript-supporting outputs
-#   for Extended Data Figure 10. Subclonal_evolution_plots.pdf, the printed
-#   summary sentences, and the tumour-fraction timing tables are auxiliary
+#   for Extended Data Figure 10. Subclonal_evolution_plots.pdf and the
+#   tumour-fraction timing tables are auxiliary
 #   descriptive analyses; they are not the final ED10 panels.
 #
 # Author:    Dory Abelman
@@ -760,8 +758,8 @@ if (nrow(plot_list) > 0) walk(plot_list$plot, print)
 dev.off()
 
 
-### Now get summary text
-# ---- 8. Summary text for manuscript ----------------------------------------
+### Summarize sample availability and emergent-CNA timing
+# ---- 8. Cohort and emergent-CNA numerical summaries -------------------------
 
 # 1) Basic counts
 df_keep        <- cfDNA_df
@@ -791,16 +789,7 @@ mean_days      <- mean(days_vec, na.rm = TRUE)
 range_days     <- range(days_vec, na.rm = TRUE)
 iqr_days       <- IQR(days_vec, na.rm = TRUE)
 
-# 5) Print formatted sentence
-summary_text <- sprintf(
-  "There were %d samples from %d patients with both baseline and progression cfDNA samples (median %.1f samples per patient, range %d–%d). Of these, %d/%d (%.1f%%) showed evidence of subclonal evolution via CNA changes, with emergent CNAs detected on average %.1f days before progression (range %d–%d; IQR %.1f days).",
-  n_samples, n_patients,
-  avg_spp, range_spp[1], range_spp[2],
-  n_emergent, n_patients, pct_emergent,
-  mean_days, range_days[1], range_days[2], iqr_days
-)
 
-cat(summary_text, "\n")
 
 ## Additional summaries
 
@@ -927,17 +916,7 @@ relapse_q  <- quantile(tf_summary$tf_relapse,  probs = c(0.25, 0.75), na.rm = TR
 rise_q     <- quantile(tf_summary$tf_rise,     probs = c(0.25, 0.75), na.rm = TRUE) * 100
 days_q     <- quantile(tf_summary$days_nadir,  probs = c(0.25, 0.75), na.rm = TRUE)
 
-summary_sentence <- sprintf(
-  "In the %d patients who showed novel CNAs at progression, median tumour fraction rose from %.1f%% (IQR %.1f–%.1f%%) at diagnosis to %.1f%% (IQR %.1f–%.1f%%) at relapse.  From each patient’s nadir (median %.1f%% [IQR %.1f–%.1f%%]), tumour fraction increased by a median of %.1f%% (IQR %.1f–%.1f%%), with the nadir detected a median of %.0f days before progression (range %.0f–%.0f days; IQR %.0f days).",
-  nrow(tf_summary),
-  median(tf_summary$tf_baseline, na.rm = TRUE) * 100, baseline_q[1], baseline_q[2],
-  median(tf_summary$tf_relapse, na.rm = TRUE)  * 100, relapse_q[1], relapse_q[2],
-  median(tf_summary$tf_nadir, na.rm = TRUE)    * 100, quantile(tf_summary$tf_nadir, .25, na.rm = TRUE) * 100, quantile(tf_summary$tf_nadir, .75, na.rm = TRUE) * 100,
-  median(tf_summary$tf_rise, na.rm = TRUE)     * 100, rise_q[1], rise_q[2],
-  median(tf_summary$days_nadir, na.rm = TRUE), min(tf_summary$days_nadir, na.rm = TRUE), max(tf_summary$days_nadir, na.rm = TRUE), IQR(tf_summary$days_nadir, na.rm = TRUE)
-)
 
-cat(summary_sentence, "\n")
 
 
 # 3) Compute medians and ranges
@@ -946,17 +925,7 @@ relapse_range  <- range(tf_summary$tf_relapse,  na.rm = TRUE) * 100
 rise_range     <- range(tf_summary$tf_rise,     na.rm = TRUE) * 100
 days_range     <- range(tf_summary$days_nadir,  na.rm = TRUE)
 
-summary_sentence <- sprintf(
-  "In the %d patients who showed novel CNAs at progression, median tumour fraction rose from %.1f%% (range %.1f–%.1f%%) at diagnosis to %.1f%% (range %.1f–%.1f%%) at relapse. From each patient’s nadir (median %.1f%% [range %.1f–%.1f%%]), tumour fraction increased by a median of %.1f%% (range %.1f–%.1f%%), with the nadir detected a median of %.0f days before progression (range %.0f–%.0f days).",
-  nrow(tf_summary),
-  median(tf_summary$tf_baseline, na.rm = TRUE) * 100, baseline_range[1], baseline_range[2],
-  median(tf_summary$tf_relapse,  na.rm = TRUE) * 100, relapse_range[1],  relapse_range[2],
-  median(tf_summary$tf_nadir,    na.rm = TRUE) * 100, min(tf_summary$tf_nadir, na.rm = TRUE) * 100, max(tf_summary$tf_nadir, na.rm = TRUE) * 100,
-  median(tf_summary$tf_rise,     na.rm = TRUE) * 100, rise_range[1], rise_range[2],
-  median(tf_summary$days_nadir,  na.rm = TRUE), days_range[1], days_range[2]
-)
 
-cat(summary_sentence, "\n")
 
 write_csv(tf_summary, file.path(outdir, "Tumor_fraction_summary_new_CNA_patients.csv"))
 
@@ -1001,17 +970,7 @@ relapse_q  <- quantile(tf_summary$tf_relapse,  probs = c(0.25, 0.75), na.rm = TR
 rise_q     <- quantile(tf_summary$tf_rise,     probs = c(0.25, 0.75), na.rm = TRUE) * 100
 days_q     <- quantile(tf_summary$days_nadir,  probs = c(0.25, 0.75), na.rm = TRUE)
 
-summary_sentence <- sprintf(
-  "In the %d patients who did not show novel CNAs at progression, median tumour fraction rose from %.1f%% (IQR %.1f–%.1f%%) at diagnosis to %.1f%% (IQR %.1f–%.1f%%) at relapse.  From each patient’s nadir (median %.1f%% [IQR %.1f–%.1f%%]), tumour fraction increased by a median of %.1f%% (IQR %.1f–%.1f%%), with the nadir detected a median of %.0f days before progression (range %.0f–%.0f days; IQR %.0f days).",
-  nrow(tf_summary),
-  median(tf_summary$tf_baseline, na.rm = TRUE) * 100, baseline_q[1], baseline_q[2],
-  median(tf_summary$tf_relapse, na.rm = TRUE)  * 100, relapse_q[1], relapse_q[2],
-  median(tf_summary$tf_nadir, na.rm = TRUE)    * 100, quantile(tf_summary$tf_nadir, .25, na.rm = TRUE) * 100, quantile(tf_summary$tf_nadir, .75, na.rm = TRUE) * 100,
-  median(tf_summary$tf_rise, na.rm = TRUE)     * 100, rise_q[1], rise_q[2],
-  median(tf_summary$days_nadir, na.rm = TRUE), min(tf_summary$days_nadir, na.rm = TRUE), max(tf_summary$days_nadir, na.rm = TRUE), IQR(tf_summary$days_nadir, na.rm = TRUE)
-)
 
-cat(summary_sentence, "\n")
 
 
 # 3) Compute medians and ranges
@@ -1020,17 +979,7 @@ relapse_range  <- range(tf_summary$tf_relapse,  na.rm = TRUE) * 100
 rise_range     <- range(tf_summary$tf_rise,     na.rm = TRUE) * 100
 days_range     <- range(tf_summary$days_nadir,  na.rm = TRUE)
 
-summary_sentence <- sprintf(
-  "In the %d patients who did not show novel CNAs at progression, median tumour fraction rose from %.1f%% (range %.1f–%.1f%%) at diagnosis to %.1f%% (range %.1f–%.1f%%) at relapse. From each patient’s nadir (median %.1f%% [range %.1f–%.1f%%]), tumour fraction increased by a median of %.1f%% (range %.1f–%.1f%%), with the nadir detected a median of %.0f days before progression (range %.0f–%.0f days).",
-  nrow(tf_summary),
-  median(tf_summary$tf_baseline, na.rm = TRUE) * 100, baseline_range[1], baseline_range[2],
-  median(tf_summary$tf_relapse,  na.rm = TRUE) * 100, relapse_range[1],  relapse_range[2],
-  median(tf_summary$tf_nadir,    na.rm = TRUE) * 100, min(tf_summary$tf_nadir, na.rm = TRUE) * 100, max(tf_summary$tf_nadir, na.rm = TRUE) * 100,
-  median(tf_summary$tf_rise,     na.rm = TRUE) * 100, rise_range[1], rise_range[2],
-  median(tf_summary$days_nadir,  na.rm = TRUE), days_range[1], days_range[2]
-)
 
-cat(summary_sentence, "\n")
 
 write_csv(tf_summary, file.path(outdir, "Tumor_fraction_summary_new_CNA_patients.csv"))
 
@@ -1082,20 +1031,7 @@ relapse_q  <- quantile(tf_summary$tf_relapse,  probs = c(0.25, 0.75), na.rm = TR
 rise_q     <- quantile(tf_summary$tf_rise,     probs = c(0.25, 0.75), na.rm = TRUE) * 100
 days_q     <- quantile(tf_summary$days_nadir,  probs = c(0.25, 0.75), na.rm = TRUE)
 
-summary_sentence <- sprintf(
-  "In the %d patients with baseline and cfDNA samples, median tumour fraction rose from %.1f%% (IQR %.1f–%.1f%%) at diagnosis to %.1f%% (IQR %.1f–%.1f%%) at relapse. From each patient’s nadir (median %.1f%% [IQR %.1f–%.1f%%]), tumour fraction increased by a median of %.1f%% (IQR %.1f–%.1f%%), with the nadir detected a median of %.0f days before progression (range %.0f–%.0f days; IQR %.0f days).",
-  nrow(tf_summary),
-  median(tf_summary$tf_baseline, na.rm = TRUE) * 100, baseline_q[1], baseline_q[2],
-  median(tf_summary$tf_relapse, na.rm = TRUE)  * 100, relapse_q[1], relapse_q[2],
-  median(tf_summary$tf_nadir, na.rm = TRUE)    * 100,
-  quantile(tf_summary$tf_nadir, .25, na.rm = TRUE) * 100,
-  quantile(tf_summary$tf_nadir, .75, na.rm = TRUE) * 100,
-  median(tf_summary$tf_rise, na.rm = TRUE)     * 100, rise_q[1], rise_q[2],
-  median(tf_summary$days_nadir, na.rm = TRUE), min(tf_summary$days_nadir, na.rm = TRUE),
-  max(tf_summary$days_nadir, na.rm = TRUE), IQR(tf_summary$days_nadir, na.rm = TRUE)
-)
 
-cat(summary_sentence, "\n")
 
 # 3) Compute medians and ranges
 baseline_range <- range(tf_summary$tf_baseline, na.rm = TRUE) * 100
@@ -1103,18 +1039,7 @@ relapse_range  <- range(tf_summary$tf_relapse,  na.rm = TRUE) * 100
 rise_range     <- range(tf_summary$tf_rise,     na.rm = TRUE) * 100
 days_range     <- range(tf_summary$days_nadir,  na.rm = TRUE)
 
-summary_sentence <- sprintf(
-  "In the %.0f patients with baseline and progression cfDNA samples, median tumour fraction rose from %.1f%% (range %.1f–%.1f%%) at diagnosis to %.1f%% (range %.1f–%.1f%%) at relapse. From each patient’s nadir (median %.1f%% [range %.1f–%.1f%%]), tumour fraction increased by a median of %.1f%% (range %.1f–%.1f%%), with the nadir detected a median of %.0f days before progression (range %.0f–%.0f days).",
-  nrow(tf_summary),
-  median(tf_summary$tf_baseline, na.rm = TRUE) * 100, baseline_range[1], baseline_range[2],
-  median(tf_summary$tf_relapse,  na.rm = TRUE) * 100, relapse_range[1],  relapse_range[2],
-  median(tf_summary$tf_nadir,    na.rm = TRUE) * 100,
-  min(tf_summary$tf_nadir, na.rm = TRUE) * 100, max(tf_summary$tf_nadir, na.rm = TRUE) * 100,
-  median(tf_summary$tf_rise,     na.rm = TRUE) * 100, rise_range[1], rise_range[2],
-  median(tf_summary$days_nadir,  na.rm = TRUE), days_range[1], days_range[2]
-)
 
 
-cat(summary_sentence, "\n")
 
 write_csv(tf_summary, file.path(outdir, "Tumor_fraction_summary_all_CNA_patients.csv"))

@@ -50,7 +50,7 @@
 #  Last updated:  2025-06-06
 #
 #  Notes:
-#    • All file paths are assumed relative to your project root.
+#    • All file paths are assumed relative to the project root.
 #    • Before running, ensure these inputs exist at the project-relative paths
 #      used below:
 #         – cfWGS_MS_Integrated_Metadata.xlsx
@@ -1411,7 +1411,7 @@ write.table(max_num_days_per_patient, file = "Oct2024_exported_data/max_num_days
 
 
 ### 18.3 Clean processing log to get additional dates and export 
-file_path <- "TFRIM4_Processing Log_Nov2024.xlsx"  # Replace with your file path
+file_path <- "TFRIM4_Processing Log_Nov2024.xlsx"  # Replace with the input file path
 processing_log <- read_excel(file_path)
 
 # Step 3: Select only the first three columns
@@ -2750,7 +2750,7 @@ write.csv(patients_with_either, file = "patients_with_either_cfDNA_at_baseline_a
 
 Baseline_dates_CMRG <- read_excel("M4_CMRG_Data/M4_COHORT_DIAGNOSTIC_BIOPSY.xlsx") %>%
   mutate(
-    # if your BIopsy date column is numeric serials:
+    # if the biopsy-date column contains Excel serial dates:
     Baseline_Date = as.Date(as.numeric(BIOPSY_DATE), origin = "1899-12-30"), 
     Patient = M4_id
   )

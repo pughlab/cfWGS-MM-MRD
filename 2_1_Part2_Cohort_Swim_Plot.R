@@ -725,7 +725,7 @@ imm_raw <- read_csv("Clinical data/IMMAGINE/Cleaned_IMMAGINE_chemotherapy.csv",
 ## 2a. tidy_treatments  (already long, just rename / parse), includes stransplant
 tt <- tt_raw %>%
   transmute(
-    patient = patient,                        # your CSV’s patient column
+    patient = patient,                        # the CSV’s patient column
     event   = str_to_sentence(line),          # “line” → e.g. “Diagnosis”, “Transplant”
     start   = ymd(start_date),                # parse yyyy-mm-dd
     end     = NA,                          # single-day events, set as same
@@ -914,7 +914,7 @@ censor_tbl$Baseline_Date <- censor_tbl$baseline_date # for consistency
 
 # 2) Build a “Relapse” events table ----------------------------------------
 relapse_events <- relapse_dates_full %>%
-  # if your patient ID column is called something else, rename it:
+  # if the patient ID column is called something else, rename it:
   rename(patient = Patient) %>%  
   # pivot all the relapse columns (e.g. Relapse1, Relapse2, …) into long form:
   pivot_longer(
@@ -1179,7 +1179,7 @@ IMG_new2 <- IMG_new %>%
     end   = as_date(end)
   )
 
-# 2) Drop all “Transplant” rows for IMG‑181 and IMG‑098 from your master table
+# 2) Drop all “Transplant” rows for IMG‑181 and IMG‑098 from the master table
 all_events_clean <- all_events_updated %>%
   filter(!(patient %in% c("IMG-181","IMG-098") & event == "Transplant"))
 
@@ -1190,7 +1190,7 @@ all_events_clean <- all_events_clean %>%
     by = c("patient","event","start")
   )
 
-# 4) Finally bind your cleaned master with the new rows
+# 4) Finally bind the cleaned master with the new rows
 all_events <- bind_rows(all_events_clean, IMG_new2) %>%
   arrange(patient, start)
 
@@ -1344,7 +1344,7 @@ baseline_front <- events %>%
   select(patient, baseline_date = start)
 
 # (b) Non‐front‐line patients use the first BM or blood draw
-#     where Timepoint is “Diagnosis” or “Baseline” in your sample table
+#     where Timepoint is “Diagnosis” or “Baseline” in the sample table
 non_ids <- cohort_df %>%
   filter(Cohort != "Frontline") %>%
   pull(Patient)
@@ -2194,7 +2194,7 @@ ord_df <- ord_df %>%
   mutate(
     patient = sub("_Baseline$", "", Sample),
     
-    # map your 'Cohort' to the swim-plot cohort names
+    # map the 'Cohort' to the swim-plot cohort names
     cohort  = recode(Cohort,
                      "Training" = "Front-line cohort",
                      "Test"    = "Non-front-line cohort"),
@@ -2336,7 +2336,7 @@ ann_tf <- ggplot(patient_order_combined,
 #                         "Front-line cohort"     = "Train",
 #                         "Non-front-line cohort" = "Test"))
 
-# 2) Define your new colour mapping
+# 2) Define the new colour mapping
 cohort_cols <- c(
   "Training" = "#1f77b4",
   "Test"  = "#e6550d"
@@ -2491,7 +2491,7 @@ final_plot <- ann_tf + ann_cohort + ann_paired + p_swim +
       title.position = "top",
       label.theme   = element_text(size = 7),
       title.theme   = element_text(size = 8),
-      override.aes  = list(size = 2.6)  # match your point size
+      override.aes  = list(size = 2.6)  # match the point size
     )
   )
 
@@ -2621,16 +2621,16 @@ events_combined2 <- events_combined2 %>%
 
 chemo_cols_simple <- c(
   "IMiD-based"     = "#009E73",  # the same green you use for MRD+/maintenance curves
-  "PI-based"       = "#E69F00",  # that classic orange from your cohort bars
-  "Antibody-based" = "#0072B2",  # the deep blue used on your panel A ROC lines
+  "PI-based"       = "#E69F00",  # orange used for the cohort bars
+  "Antibody-based" = "#0072B2",  # blue used for the panel A ROC lines
   "Other"          = "#999999"   # neutral grey as a fallback
 )
 
 ## Other 
 chemo_cols_simple <- c(
   "IMiD-based"     = "#35B779FF",  # the same green you use for MRD+/maintenance curves
-  "PI-based"       = "#E69F00FF",  # that classic orange from your cohort bars
-  "Antibody-based" = "#9467bd",  # the deep blue used on your panel A ROC lines
+  "PI-based"       = "#E69F00FF",  # orange used for the cohort bars
+  "Antibody-based" = "#9467bd",  # purple used for antibody-based treatment
   "Other"          = "#999999"   # neutral grey as a fallback
 )
 
@@ -2733,7 +2733,7 @@ file <- readRDS("Final_aggregate_table_cfWGS_features_with_clinical_and_demograp
 dat <- file 
 
 # 1.  Join cohort_df and keep frontline only -------------------------------------
-dat <- dat %>%                # <‑‑ your master data
+dat <- dat %>%                # <‑‑ the master data
   left_join(cohort_df, by = "Patient") 
 
 dat <- dat %>% 
@@ -2849,7 +2849,7 @@ assay_cols <- c("MFC", "clonoSEQ", "cfWGS_blood", "cfWGS_BM")
 #     # Helpful tie-breakers:
 #     # 1) Prefer patients with clonoSEQ data (higher assay sensitivity) over MFC-only within the same status
 #     has_clono = !is.na(clonoSEQ),
-#     # 2) Cohort ordering if you want Train above Test (adjust to your labels)
+#     # 2) Cohort ordering with Train above Test (adjust to the labels)
 #     Cohort    = fct_relevel(Cohort, c("Train", "Frontline", "Test", "Non-frontline"))
 #   )
 
@@ -2990,7 +2990,7 @@ if (!all(patient_order %in% cohort_df$Patient)) {
   stop("Figure 1A patient order contains a patient outside the manuscript cohort.", call. = FALSE)
 }
 
-# 3) Re‑factor your patient column
+# 3) Re‑factor the patient column
 events_combined2 <- events_combined2 %>%
   mutate(
     patient = factor(patient, levels = patient_order)
@@ -3121,7 +3121,7 @@ p_swim <- ggplot() +
   #   aes(
   #     x    = start_month_plot,
   #     xend = start_month_plot,
-  #     y    = y_num - 0.35,   # height matches your tile height ~0.7
+  #     y    = y_num - 0.35,   # height matches the tile height ~0.7
   #     yend = y_num + 0.35
   #   ),
   #   colour      = "red",
@@ -3341,12 +3341,12 @@ ann_paired <- ggplot(patient_order_combined,
 #     )
 #   )
 # 
-# # symmetric limits around 0 (at least ±100 so your requested ticks fit if possible)
+# # symmetric limits around 0 (at least ±100 so the specified axis breaks fit where possible)
 # rng     <- max(abs(patient_order_cVAF$pct_for_plot), na.rm = TRUE)
 # max_abs <- max(100, ceiling(rng / 10) * 10)
 # limits_x <- c(-max_abs, max_abs)
 # 
-# # ticks you asked for, clipped to the plotting range
+# # specified axis breaks, clipped to the plotting range
 # breaks_wanted <- c(-100, -50, 0, 50, 100)
 # breaks_x <- breaks_wanted[breaks_wanted >= limits_x[1] & breaks_wanted <= limits_x[2]]
 # 
@@ -3365,12 +3365,12 @@ ann_paired <- ggplot(patient_order_combined,
 #   # x axis symmetric and labelled in %
 #   scale_x_continuous(
 #     name   = expression(Delta~"ctDNA cVAF"),
-#     limits = c(-100, 100),        # adjust if your range is larger
+#     limits = c(-100, 100),        # adjust if the range is larger
 #     breaks = seq(-100, 100, 50),
 #     labels = scales::label_number(accuracy = 1, suffix = "%"),
 #     expand = c(0, 0)
 #   ) +
-#   # use your patient order
+#   # use the patient order
 #   scale_y_discrete(
 #     limits = rev(patient_order_tbl_cVAF),
 #     expand = c(0, 0)
@@ -3425,7 +3425,7 @@ ann_mrd <- ggplot(df_mrd_long %>% filter(assay %in% c("cfWGS_BM", "cfWGS_blood")
     )
   ) +
   scale_y_discrete(
-    limits = rev(patient_order_mrd),  # keep your defined order
+    limits = rev(patient_order_mrd),  # keep the defined order
     labels = lab_fun,
     expand = c(0, 0)
   ) +
@@ -3475,12 +3475,12 @@ ann_mrd <- ggplot(df_mrd_long %>% filter(assay %in% c("cfWGS_BM", "cfWGS_blood")
 #     )
 #   )
 # 
-# # symmetric limits around 0 (at least ±100 so your requested ticks fit if possible)
+# # symmetric limits around 0 (at least ±100 so the specified axis breaks fit where possible)
 # rng     <- max(abs(patient_order_cVAF$pct_for_plot), na.rm = TRUE)
 # max_abs <- max(100, ceiling(rng / 10) * 10)
 # limits_x <- c(-max_abs, max_abs)
 # 
-# # ticks you asked for, clipped to the plotting range
+# # specified axis breaks, clipped to the plotting range
 # breaks_wanted <- c(-100, -50, 0, 50, 100)
 # breaks_x <- breaks_wanted[breaks_wanted >= limits_x[1] & breaks_wanted <= limits_x[2]]
 # 
@@ -3499,12 +3499,12 @@ ann_mrd <- ggplot(df_mrd_long %>% filter(assay %in% c("cfWGS_BM", "cfWGS_blood")
 #   # x axis symmetric and labelled in %
 #   scale_x_continuous(
 #     name   = "MRD Probability",
-#     limits = c(-100, 100),        # adjust if your range is larger
+#     limits = c(-100, 100),        # adjust if the range is larger
 #     breaks = seq(-100, 100, 50),
 #     labels = scales::label_number(accuracy = 1, suffix = "%"),
 #     expand = c(0, 0)
 #   ) +
-#   # use your patient order
+#   # use the patient order
 #   scale_y_discrete(
 #     limits = rev(patient_order_tbl_cVAF),
 #     expand = c(0, 0)
@@ -3573,7 +3573,7 @@ final_plot <- ann_cohort + ann_mrd + p_swim +
       title.position = "top",
       label.theme   = element_text(size = 7),
       title.theme   = element_text(size = 8),
-      override.aes  = list(size = 2.6)  # match your point size
+      override.aes  = list(size = 2.6)  # match the point size
     )
   )
 
@@ -3637,7 +3637,7 @@ p_symbols <- ggplot(legend_df, aes(y = y)) +
     aes(x = 0, y = y),
     label    = "|",          # single vertical bar
     fontface = "bold",       # bold weight
-    size     = 6,            # match your other legend sizes
+    size     = 6,            # match the other legend sizes
     colour   = "red"
   ) +
   # 2c) Ongoing: black right arrow

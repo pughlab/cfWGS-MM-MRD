@@ -4722,7 +4722,7 @@ test_cohort <- data_scored_masked %>%
 
 prev <- mean(frontline$MRD_truth == 1, na.rm = TRUE)
 
-# 2) Identify all “_prob” columns (i.e. your different models)
+# 2) Identify all “_prob” columns (i.e. the different models)
 prob_cols <- grep("_prob$", colnames(data_scored), value = TRUE)
 
 ### 3A) First get metrics for entire cohort 
@@ -5292,7 +5292,7 @@ write.csv(all_perf_metrics,
 #   filter(model == model_name) %>%
 #   pull(youden)
 # 
-# # Subset your full metrics table to just this model
+# # Subset the full metrics table to just this model
 # metrics_model <- all_metrics_rescored_primary %>%
 #   filter(model == model_name)
 # 
@@ -5301,7 +5301,7 @@ write.csv(all_perf_metrics,
 #   slice_min(order_by = abs(threshold - youden_thr), n = 1) %>%
 #   mutate(type = "youden")
 # 
-# # Find the row nearest your fixed cutoff
+# # Find the row nearest the fixed cutoff
 # metrics_fixed <- metrics_model %>%
 #   slice_min(order_by = abs(threshold - fixed_thr), n = 1) %>%
 #   mutate(type = "fixed")
@@ -5406,7 +5406,7 @@ bm_preds <- nested_bm_validation_updated2$outer_predictions
 #                   )
 #                 })
 
-# 1) Compute one ROC curve per combo from your outer‑fold preds to get the nested CV version 
+# 1) Compute one ROC curve per combo from the outer‑fold preds to get the nested CV version
 roc_dfs <- bm_preds %>% 
   group_by(combo) %>% 
   group_map(~{
@@ -5997,7 +5997,7 @@ ms_copy_artifact(
 #     panel.grid         = element_blank()
 #   ) +
 #   scale_colour_manual(
-#     # pick the same palette entries but only for your two models
+#     # pick the same palette entries but only for the two models
 #     values = okabe_ito8[ match(selected_models, levels(roc_df$combo)) ],
 #     labels = legend_labels[selected_models]
 #   )
@@ -6377,7 +6377,7 @@ perf_df <- bm_obj$validation_metrics %>%
     sens_sd = 0,
     spec_sd = 0
   ) %>%
-  # Keep only combos that made it into your ROC dataframe
+  # Keep only combos that made it into the ROC dataframe
   filter(combo %in% levels(roc_df$combo)) %>%
   # Ensure identical factor ordering for plotting consistency
   mutate(combo = factor(combo, levels = levels(roc_df$combo)))
@@ -7637,7 +7637,7 @@ roc_plot <- ggplot(roc_df, aes(x = fpr, y = tpr, colour = combo)) +
 # ── 2) Prepare perf_df with the same factor‐ordering as roc_df ───────────────
 perf_df <- blood_obj$nested_metrics %>%
   select(combo, sens_mean, sens_sd, spec_mean, spec_sd) %>%
-  # keep only combos that actually made it into your roc_df
+  # keep only combos that actually made it into the roc_df
   filter(combo %in% levels(roc_df$combo)) %>%
   # now drop any leftover unused levels
   mutate(combo = factor(combo, levels = levels(roc_df$combo))) 
@@ -7810,13 +7810,13 @@ roc_df <- bind_rows(roc_dfs) %>%
 
 roc_df$combo <- factor(roc_df$combo, levels = auc_tbl$combo)
 
-# Keep factor levels consistent with your ROC plot (if roc_df exists already)
+# Keep factor levels consistent with the ROC plot (if roc_df exists already)
 if (exists("roc_df")) {
   pred_long$combo <- factor(pred_long$combo, levels = levels(roc_df$combo))
 }
 
 # ------------------------------------------------------------------
-# Thresholds to mark (same names as in your ROC 'combo' column)
+# Thresholds to mark (same names as in the ROC 'combo' column)
 # ------------------------------------------------------------------
 mark_tbl <- tribble(
   ~combo,                      ~threshold,
@@ -7889,7 +7889,7 @@ roc_plot_tmp <- roc_df %>%
     panel.grid         = element_blank()
   ) +
   scale_colour_manual(
-    # pick the same palette entries but only for your two models
+    # pick the same palette entries but only for the two models
     values = col_map_all,
     labels = c(
       Blood_zscore_only_sites          = "Sites model",
@@ -8070,7 +8070,7 @@ perf_df <- blood_obj$validation_metrics %>%
     sens_sd = 0,
     spec_sd = 0
   ) %>%
-  # Keep only combos that made it into your ROC dataframe
+  # Keep only combos that made it into the ROC dataframe
   filter(combo %in% levels(roc_df$combo)) %>%
   # Ensure identical factor ordering for plotting consistency
   mutate(combo = factor(combo, levels = levels(roc_df$combo)))
@@ -8445,8 +8445,8 @@ fragmentomics_preds <- nested_fragmentomics_validation_updated3$outer_prediction
 #                 })
 
 ## On the pooled outer fold predictions 
-# 1) Compute one ROC curve per combo from your outer‑fold preds
-# 1) Compute one ROC curve per combo from your outer‑fold preds to get the nested CV version 
+# 1) Compute one ROC curve per combo from the outer‑fold preds
+# 1) Compute one ROC curve per combo from the outer‑fold preds to get the nested CV version
 roc_dfs <- fragmentomics_preds %>% 
   group_by(combo) %>% 
   group_map(~{
@@ -8727,7 +8727,7 @@ perf_df <- fragmentomics_obj$validation_metrics %>%
     sens_sd = 0,
     spec_sd = 0
   ) %>%
-  # Keep only combos that made it into your ROC dataframe
+  # Keep only combos that made it into the ROC dataframe
   filter(combo %in% levels(roc_df$combo)) %>%
   # Ensure identical factor ordering for plotting consistency
   mutate(combo = factor(combo, levels = levels(roc_df$combo)))
@@ -8986,7 +8986,7 @@ if (isTRUE(run_non_manuscript_diagnostics)) {
 ### Now try smoothed 
 # ── 1. Compute binormal-smoothed ROC curves ────────────────────────────────
 smoothed_rocs <- imap_dfr(models_list, function(fit, label) {
-  # 1a) get predicted probabilities on your primary cohort
+  # 1a) get predicted probabilities on the primary cohort
   prob <- predict(fit, newdata = valid_df, type = "prob")[, positive_class]
   
   # 1b) raw ROC object

@@ -898,7 +898,7 @@ screenshotter_df <- Ig_caller_df_cfWGS_filtered_aggressive2 %>%
     End   = End   + 50
   )
 
-# 2) load your “canonical” list of BAMs (no .bam suffix)
+# 2) load the “canonical” list of BAMs (no .bam suffix)
 current_bams <- read_csv("IG_Mini_Bams.csv")$Name %>%
   str_remove("\\.bam$")
 
@@ -983,7 +983,7 @@ screenshotter_df <- Ig_caller_df_cfWGS_filtered_aggressive2 %>%
     End   = End   + 50
   )
 
-# 2) load your “canonical” list of BAMs (no .bam suffix)
+# 2) load the “canonical” list of BAMs (no .bam suffix)
 current_bams <- read_csv("IG_Mini_Bams.csv")$Name %>%
   str_remove("\\.bam$")
 

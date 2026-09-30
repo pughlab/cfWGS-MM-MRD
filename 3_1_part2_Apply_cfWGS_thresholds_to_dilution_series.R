@@ -558,7 +558,7 @@ apply_selected <- function(dat, models, thresholds, positive_class = "pos") {
   # Models and thresholds were trained/selected upstream. This function only
   # applies them to rows with complete predictor values and leaves non-scorable
   # rows as NA, which is important for PWGVAL rows missing MRDetect features.
-  out <- dat            # start with your full data.frame
+  out <- dat            # start with the full data.frame
   n   <- nrow(dat)
   
   # Check that models and thresholds have at least some overlap
@@ -783,7 +783,7 @@ write_csv(
 )
 
 ### Now edit the dilution LOD to the correct one 
-# these are your true measured VAFs (%)
+# these are the true measured VAFs (%)
 baseline_vaf <- 0.688    # baseline‐only library
 neg_vaf      <- 0.0087   # MRD‐negative library
 orig_full    <- 1.300    # the original “100%” point
@@ -1475,7 +1475,7 @@ ggsave("Final Tables and Figures/Fig_LOD_feature_correlations_updated2.svg", p,
 # ───────────────────────────────────────────
 # 1. BM Features
 # ───────────────────────────────────────────
-# 1) define your BM features of interest
+# 1) define the BM features of interest
 bm_features <- c(
   "detect_rate_BM",           # BM mutation detection rate
   "zscore_BM",                # BM z-score
@@ -1623,14 +1623,14 @@ ggsave(
 
 
  ## Add call features 
-# 1) specify which of your features are the model‐probabilities
+# 1) specify which of the features are the model‐probabilities
 prob_features <- c(
   "BM_zscore_only_detection_rate_prob",  # BM cVAF Z-score model prob.
  # "BM_zscore_only_sites_prob"            # BM sites Z-score model prob.
   "BM_base_zscore_prob" # combined model
 )
 
-# 2) define your thresholds (one per feature)
+# 2) define the thresholds (one per feature)
 # thresholds <- tibble(
 #   feature = c("BM_zscore_only_sites_prob",
 #               "BM_zscore_only_detection_rate_prob"),
@@ -1728,7 +1728,7 @@ ggsave(
 
 
 ### Add log ticks and flip x-axis 
-# 1) compute the full set of decades you care about:
+# 1) compute the full set of decades needed for this analysis:
 decades     <- -10:10
 major_breaks <- 10^decades
 minor_breaks <- rep(1:9, times = length(decades)) * 
@@ -1880,7 +1880,7 @@ ggsave(
 
 
 #### Now do the overlap across all the features for 4H
-# 1) Select just the features you care about, in the order you want them
+# 1) Select just the features needed for this analysis, in the specified order
 selected_feats <- c(
   "detect_rate_BM",                       # BM mutation detection rate
   "zscore_BM",                            # BM sites z-score
@@ -2044,7 +2044,7 @@ ms_copy_artifact(
 ### Do big with everything together 
 
 #### Now do the overlap across all the features for 4H
-# 1) Select just the features you care about, in the order you want them
+# 1) Select just the features needed for this analysis, in the specified order
 selected_feats <- c(
   "detect_rate_BM",                       # BM mutation detection rate
   "zscore_BM",                            # BM sites z-score
@@ -2303,7 +2303,7 @@ ggsave(
 
 
 ## Add call features 
-# 1) specify which of your features are the model‐probabilities
+# 1) specify which of the features are the model‐probabilities
 # prob_features <- c(
 #   "Blood_zscore_only_detection_rate_prob",  # Blood cVAF Z-score model prob.
 #   "Blood_zscore_only_sites_prob"            # Blood sites Z-score model prob.
@@ -2314,7 +2314,7 @@ prob_features <- c(
   "Blood_zscore_only_sites_prob"
 )
 
-# 2) define your thresholds (one per feature)
+# 2) define the thresholds (one per feature)
 # thresholds <- tibble(
 #   feature = c("Blood_zscore_only_sites_prob",
 #               "Blood_zscore_only_detection_rate_prob"),
@@ -2625,7 +2625,7 @@ ggsave(
 
 
 #### Now do the overlap across all the features for 5H
-# 1) Select just the features you care about, in the order you want them
+# 1) Select just the features needed for this analysis, in the specified order
 selected_feats <- c(
   "detect_rate_blood",   "Blood_plus_fragment_min_prob",                    # Blood mutation detection rate
   "zscore_blood",                            # Blood sites z-score
@@ -2636,7 +2636,7 @@ selected_feats <- c(
   "WGS_Tumor_Fraction_Blood_plasma_cfDNA" # ichorCNA tumour fraction
 )
 
-# your custom labels
+# the custom labels
 custom_labels <- c(
   detect_rate_blood                              = "Cumulative VAF (cVAF)",
   z_score_detection_rate_blood                   = "cVAF z‑score",

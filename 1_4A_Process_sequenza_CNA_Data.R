@@ -428,7 +428,7 @@ for (i in seq_along(seg_files)) {
   # ---- build per-segment categorical calls (baseline-aware; fallback to diploid if NA)
   if (is.na(baseline_int)) {
     seg_calls <- seg_core %>%
-      dplyr::mutate(Call = call_from_CNt_AB(CNt, A, B))  # your original backup rule
+      dplyr::mutate(Call = call_from_CNt_AB(CNt, A, B))  # the fallback copy-number rule
   } else {
     seg_calls <- seg_core %>%
       dplyr::mutate(
@@ -977,7 +977,7 @@ final_calls_mat_cyto <- matrix(
   dimnames = list(NULL, samples)
 )
 
-# Severity ladders (edit if your labels differ)
+# Severity ladders (edit if the labels differ)
 gain_priority <- c("HLAMP","AMP","GAIN")
 loss_priority <- c("HOMD","HETD","LOSS","CNLOH")
 
@@ -997,7 +997,7 @@ for (p in probe_ids_cyto) {
   
   # Direction-specific priority for this probe
   feat <- feature_vec_cyto[p]
-  dir  <- unname(dir_map[feat])   # "gain" or "loss" from your existing dir_map
+  dir  <- unname(dir_map[feat])   # "gain" or "loss" from the existing dir_map
   pri  <- if (identical(dir, "gain")) gain_priority else loss_priority
   
   # Precompute severity rank per cell (lower is more severe)
@@ -1020,7 +1020,7 @@ for (p in probe_ids_cyto) {
   }
 }
 
-# Tidy long and bin calls by expected direction, mirroring your probe_calls_bin
+# Tidy long and bin calls by expected direction, mirroring probe_calls_bin
 probe_meta_cyto <- tibble::tibble(
   probe_idx = probe_ids_cyto,
   feature   = as.character(mcols(probe_gr_cyto)$feature)

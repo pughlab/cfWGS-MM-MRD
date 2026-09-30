@@ -791,7 +791,7 @@ temp_qc_blood <- maf_subset_blood@data %>%
   # 1) only well‐supported tumour calls
   filter(t_depth > 10) %>%
   
-  # 2) your extra annotation columns
+  # 2) the extra annotation columns
   mutate(
     Sample           = sub("\\.bam$", "", BAM_File),
     Mutation_cDNA    = paste0(Hugo_Symbol, ":", HGVSc),
@@ -824,7 +824,7 @@ temp_qc_blood <- maf_subset_blood@data %>%
     )
   ) %>%
   
-  # 3) pick your key QC columns first, then grab everything else
+  # 3) pick the key QC columns first, then grab everything else
   select(
     # core sample & variant IDs
     Tumor_Sample_Barcode, Sample, Patient, Timepoint, Sample_type,
@@ -841,7 +841,7 @@ temp_qc_blood <- maf_subset_blood@data %>%
     n_depth, n_ref_count, n_alt_count,
     # allele frequencies & quality
     VAF, Score, FILTER, vcf_qual,
-    # your new fields
+    # the new fields
     Mutation_cDNA, Mutation_Genomic, Mutation_Type,
     
     #-and now everything else for downstream QC
@@ -854,7 +854,7 @@ temp_qc_bm <- maf_subset@data %>%
   # 1) only well‐supported tumour calls
   filter(t_depth >= 10) %>%
   
-  # 2) your extra annotation columns
+  # 2) the extra annotation columns
   mutate(
     Sample           = sub("\\.bam$", "", BAM_File),
     Mutation_cDNA    = paste0(Hugo_Symbol, ":", HGVSc),
@@ -886,7 +886,7 @@ temp_qc_bm <- maf_subset@data %>%
     )
   ) %>%
   
-  # 3) pick your key QC columns first, then grab everything else
+  # 3) pick the key QC columns first, then grab everything else
   select(
     # core sample & variant IDs
     Tumor_Sample_Barcode, Sample, Patient, Timepoint, Sample_type,
@@ -903,7 +903,7 @@ temp_qc_bm <- maf_subset@data %>%
     n_depth, n_ref_count, n_alt_count,
     # allele frequencies & quality
     VAF, Score, FILTER, vcf_qual,
-    # your new fields
+    # the new fields
     Mutation_cDNA, Mutation_Genomic, Mutation_Type,
     
     #-and now everything else for downstream QC

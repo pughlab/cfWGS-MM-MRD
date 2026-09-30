@@ -369,14 +369,7 @@ median_follow <- dat %>%
             lo  = min(months,   na.rm = TRUE),
             hi  = max(months,   na.rm = TRUE))
 
-sentence <- glue(
-  "Across the longitudinal series ({n_cfDNA_draws_matched_baseline} cfDNA draws with matched baseline samples ",
-  "from {n_patients} patients, ",
-  "median follow-up = {median_follow$med} months, range ",
-  "{median_follow$lo}–{median_follow$hi}),"
-)
 
-cat(sentence, "\n")
 
 ### Do seperately by feature 
 # ----- define the feature set you consider "cfDNA features"
@@ -404,11 +397,6 @@ median_follow_any <- dat_any %>%
             lo  = min(months,   na.rm = TRUE),
             hi  = max(months,   na.rm = TRUE))
 
-sentence_any <- glue::glue(
-  "Across the longitudinal series ({n_draws_any} cfDNA draws with ≥1 feature ",
-  "from {n_patients_any} patients, median follow-up = {median_follow_any$med} months, ",
-  "range {median_follow_any$lo}–{median_follow_any$hi})."
-)
 
 # =============  B) zscore_BM universe  =============
 dat_bm <- dat %>% filter(!is.na(zscore_BM))
@@ -425,10 +413,6 @@ median_follow_bm <- dat_bm %>%
             lo  = min(months,   na.rm = TRUE),
             hi  = max(months,   na.rm = TRUE))
 
-sentence_bm <- glue::glue(
-  "z-score (BM lists): {n_draws_bm} draws from {n_patients_bm} patients; ",
-  "follow-up median {median_follow_bm$med} months (range {median_follow_bm$lo}–{median_follow_bm$hi})."
-)
 
 # =============  C) zscore_blood universe  =============
 dat_blood <- dat %>% filter(!is.na(zscore_blood))
@@ -445,15 +429,7 @@ median_follow_blood <- dat_blood %>%
             lo  = min(months,   na.rm = TRUE),
             hi  = max(months,   na.rm = TRUE))
 
-sentence_blood <- glue::glue(
-  "z-score (blood lists): {n_draws_blood} draws from {n_patients_blood} patients; ",
-  "follow-up median {median_follow_blood$med} months (range {median_follow_blood$lo}–{median_follow_blood$hi})."
-)
 
-# Print the three sentences for quick copy/paste into the manuscript
-cat(sentence_any, "\n")
-cat(sentence_bm,  "\n")
-cat(sentence_blood, "\n")
 
 
 
@@ -594,18 +570,8 @@ for (i in seq_len(nrow(pairwise_included))) {
 }
 
 ## Check labs 
-### Assemble paragraph 
-# helper to format p-values
-format_p <- function(p) {
-  if (is.na(p)) return("NA")
-  if (p < 0.001) return("<0.001")
-  sprintf("%.3f", p)
-}
 
-# 5. Extract values for paragraph
-format_p <- function(p) {
-  if (is.na(p)) return("NA"); if (p<0.001) return("<0.001"); sprintf("%.3f",p)
-}
+# Feature-specific paired statistics
 bm_site <- filter(pairwise_stats,Feature=="zscore_BM")
 bm_vafz <- filter(pairwise_stats,Feature=="z_score_detection_rate_BM")
 bm_rate <- filter(pairwise_stats,Feature=="detect_rate_BM")
@@ -620,48 +586,17 @@ tf_feat <- filter(pairwise_stats,Feature=="WGS_Tumor_Fraction_Blood_plasma_cfDNA
 # 6. Key Spearman correlations
 clin_cor <- cor.test(dat$detect_rate_blood, dat$MRD_Clinical_Binary,
                      method="spearman",use="pairwise.complete.obs")
-rho_clin <- round(clin_cor$estimate,2); p_clin <- format_p(clin_cor$p.value)
+rho_clin <- round(clin_cor$estimate,2)
 
 tf_bm_cor <- cor.test(dat$WGS_Tumor_Fraction_Blood_plasma_cfDNA, dat$Blood_Mutation_Count,
                       method="spearman",use="pairwise.complete.obs")
-rho_tf_bm <- round(tf_bm_cor$estimate,2); p_tf_bm <- format_p(tf_bm_cor$p.value)
+rho_tf_bm <- round(tf_bm_cor$estimate,2)
 
 tf_fs_cor <- cor.test(dat$WGS_Tumor_Fraction_Blood_plasma_cfDNA, dat$FS,
                       method="spearman",use="pairwise.complete.obs")
-rho_tf_fs <- round(tf_fs_cor$estimate,2); p_tf_fs <- format_p(tf_fs_cor$p.value)
+rho_tf_fs <- round(tf_fs_cor$estimate,2)
 
-# 7. Assemble paragraph
-paragraph <- glue(
-  "In BM, the site-detection z-score declined from {round(bm_site$Median_baseline,2)} to {round(bm_site$Median_follow1,2)} ",
-  "(fold = {round(bm_site$Fold_change,2)}×; p = {format_p(bm_site$p_Wilcoxon)}), and the cumulative VAF z-score from ",
-  "{round(bm_vafz$Median_baseline,2)} to {round(bm_vafz$Median_follow1,2)} ",
-  "(fold = {round(bm_vafz$Fold_change,2)}×; p = {format_p(bm_vafz$p_Wilcoxon)}). The raw detection rate also decreased significantly, ",
-  "dropping by {round((bm_rate$Median_follow1 - bm_rate$Median_baseline)*100,2)} percentage points ",
-  "({round(bm_rate$Median_baseline*100,2)}%→{round(bm_rate$Median_follow1*100,2)}%; ",
-  "fold = {round(bm_rate$Fold_change,2)}×; p = {format_p(bm_rate$p_Wilcoxon)}).",
-  
-  "\n\nIn cfDNA, the blood site-detection z-score dropped from {round(cf_site$Median_baseline,2)} to {round(cf_site$Median_follow1,2)} ",
-  "(fold = {round(cf_site$Fold_change,2)}×; p = {format_p(cf_site$p_Wilcoxon)}), the cumulative VAF z-score from ",
-  "{round(cf_vafz$Median_baseline,2)} to {round(cf_vafz$Median_follow1,2)} ",
-  "(fold = {round(cf_vafz$Fold_change,2)}×; p = {format_p(cf_vafz$p_Wilcoxon)}), and the raw blood detection rate from ",
-  "{round(cf_rate$Median_baseline*100,2)}% to {round(cf_rate$Median_follow1*100,2)}% ",
-  "(fold = {round(cf_rate$Fold_change,2)}×; p = {format_p(cf_rate$p_Wilcoxon)}). ",
-  "These tracked closely with clinical response: Spearman ρ = {rho_clin} (p = {p_clin}).",
-  
-  "\n\nFragmentomic signals moved in tandem: the fragment-size score contracted by ",
-  "{round((fs_feat$Median_follow1 - fs_feat$Median_baseline)/abs(fs_feat$Median_baseline)*100,2)}% ",
-  "(fold = {round(fs_feat$Fold_change,2)}×; p = {format_p(fs_feat$p_Wilcoxon)}), the mean coverage over MM enhancers fell from ",
-  "{round(mc_feat$Median_baseline,2)}× to {round(mc_feat$Median_follow1,2)}× ",
-  "(fold = {round(mc_feat$Fold_change,2)}×; p = {format_p(mc_feat$p_Wilcoxon)}), and the proportion of short fragments ",
-  "decreased from {round(ps_feat$Median_baseline*100,2)}% to {round(ps_feat$Median_follow1*100,2)}% ",
-  "(fold = {round(ps_feat$Fold_change,2)}×; p = {format_p(ps_feat$p_Wilcoxon)}). ",
-  "Meanwhile, ichorCNA tumour fraction dropped from {round(tf_feat$Median_baseline*100,2)}% to ",
-  "{round(tf_feat$Median_follow1*100,2)}% (fold = {round(tf_feat$Fold_change,2)}×; p = {format_p(tf_feat$p_Wilcoxon)}), ",
-  "remaining strongly correlated with blood mutation burden (ρ = {rho_tf_bm}; p = {p_tf_bm}) and FS (ρ = {rho_tf_fs}; p = {p_tf_fs})."
-)
 
-# print it
-cat(paragraph, "\n")
 
 
 

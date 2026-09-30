@@ -159,7 +159,7 @@ run_bam_archive_diagnostics <- tolower(Sys.getenv("CFWGS_RUN_BAM_ARCHIVE_DIAGNOS
 ## ------------------------------------------------------------------
 ## 2.  STARTING DATA  ------------------------------------------------
 ## ------------------------------------------------------------------
-dat <- file   # <- your tibble
+dat <- file   # <- the tibble
 
 ## ------------------------------------------------------------------
 ## 3.  KEEP BASELINE SAMPLES AND ENSURE NO DUPLICATES ---------------
@@ -1165,7 +1165,7 @@ combined_clinical_data_updated <- read_combined_clinical_metadata_with_revision(
 )
 
 
-# 1) Annotate your mutation table with clinical metadata
+# 1) Annotate the mutation table with clinical metadata
 mut_feat <- mutation_data_total %>%
   left_join(
     All_feature_data %>%
@@ -1287,7 +1287,7 @@ cfDNA_tf_all <- cfDNA_tf_all %>%
     )
   )
 
-# add to your mutation sets
+# add to the mutation sets
 mut_sets <- mut_sets %>%
   left_join(cfDNA_tf_all, by = c("Patient","Timepoint"))
 
@@ -2200,7 +2200,7 @@ panels <- tibble(
   )
 )
 
-# 2) pivot your dat_base into long form
+# 2) pivot dat_base into long form
 df_long <- dat_base %>%
   pivot_longer(
     cols      = panels$var,
@@ -2245,7 +2245,7 @@ p_combined <- ggplot(df_long, aes(x = x, y = Blood_Mutation_Count, colour = coho
     inherit.aes = FALSE
   ) +
   scale_color_manual(
-    values = cohort_cols,   # your existing colours
+    values = cohort_cols,   # the existing colours
     labels = c(
       "Frontline induction-transplant" = "Training Cohort",
       "Non-frontline"                  = "Test Cohort"
@@ -3571,7 +3571,7 @@ if (!is.na(edfig2_final_pdf)) {
 
 
 # Get overall summary
-# --- 0) Define event groups (adjust if your names differ) ---------------------
+# --- 0) Define event groups (adjust if the names differ) ---------------------
 cna_events           <- c("amp1q","del13q","del17p","del1p","hyperdiploid")
 translocation_events <- c("IGH_CCND1","IGH_FGFR3","IGH_MAF","IGH_MYC")
 mutation_events      <- c("Mutations")
@@ -3860,7 +3860,7 @@ dat_small <- dat_small %>%
 # --- 0) Load ID map
 id_map <- readRDS("id_map.rds") %>% distinct(Patient, New_ID)
 
-# Make a joinable version that uses the same Patient key as your output (New_ID if available)
+# Make a joinable version that uses the same Patient key as the output (New_ID if available)
 dat_small <- dat_small %>%
   left_join(id_map, by = c("Patient" = "Patient")) %>%
   mutate(Patient = coalesce(New_ID, Patient)) 

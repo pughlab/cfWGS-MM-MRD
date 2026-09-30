@@ -100,7 +100,7 @@ visit_levels <- c("V1","V3","V5","V7","V8","V9","V10","V11","V12","V13","R")
 ## If you only have visit labels (no dates), use a visit landmark (eg "V7").
 landmark_visit <- "V7"
 
-## Fixed horizon PFS estimate (months). Adjust to your abstract.
+## Fixed horizon PFS estimate (months). Set the horizon to match the reported survival estimate.
 fixed_horizon_months <- 24
 
 ## Proteomics high/low thresholding rule for “joint modality” groups
@@ -165,7 +165,7 @@ pos_to_long <- function(df, tech_label) {
 }
 
 code_to_mrd_status <- function(code) {
-  ## Your code uses: 100 = MRD+, else MRD-
+  ## MRD status encoding: 100 = MRD+, else MRD-
   ## Also supports strings like "pos"/"neg" if they show up later.
   code_chr <- as.character(code)
   
@@ -356,7 +356,7 @@ EasyM_joined <- EasyM_values_long %>%
 write_csv(EasyM_joined, file.path(out_dir, "EasyM_long_quant_and_binary.csv"))
 
 ## ============================================================
-## 3) EasyM ONLY: plots analogous to your draft, but EasyM only
+## 3) EasyM ONLY: plots restricted to EasyM measurements
 ## ============================================================
 # Generate descriptive plots showing:
 # - Longitudinal trajectories of M-protein levels per patient
@@ -530,31 +530,8 @@ n_patients_total <- dat_joined %>%
   summarise(n = n_distinct(Patient)) %>%
   pull(n)
 
-tp_text <- tp_summary %>%
-  mutate(
-    tp_label = ifelse(
-      is.na(timepoint_info) | timepoint_info == "",
-      paste0("timepoint ", Timepoint),
-      paste0("timepoint ", Timepoint, " (", timepoint_info, ")")
-    ),
-    chunk = paste0(
-      tp_label, ": ",
-      n_patients, " patients (", n_samples, " samples)"
-    )
-  ) %>%
-  pull(chunk) %>%
-  paste(collapse = "; ")
 
-final_sentence <- paste0(
-  "A total of ", n_patients_total,
-  " patients were included, with longitudinal samples collected across ",
-  length(unique(tp_summary$Timepoint)),
-  " timepoints. Sample availability by timepoint was as follows: ",
-  tp_text,
-  "."
-)
 
-cat(final_sentence)
 
 ## 1) Count unique sites as the 2-letter prefix in Patient (e.g., "CA" from "CA-01")
 n_sites <- dat_joined %>%
@@ -588,7 +565,7 @@ library(patchwork)
 library(tableone)      # optional – baseline table
 library(timeROC)       # optional – AUC vs time
 
-## INPUT (already saved from your pipeline) ------------------------------
+## INPUT (already saved from the pipeline) ------------------------------
 final_tbl_rds <- "Exported_data_tables_clinical/Censor_dates_per_patient_for_PFS_updated.rds"
 
 ## OUTPUT ----------------------------------------------------------------------
@@ -637,7 +614,7 @@ survival_df <- dat %>%
     Time_to_event   = as.numeric(censor_date - sample_date),
     Relapsed_Binary = as.integer(relapsed)
   ) %>%
-  # keep only the columns your KM‐loop needs
+  # keep only the columns the KM‐loop needs
   select(
     Patient, Timepoint, sample_date, censor_date, timepoint_info,
     Time_to_event, Relapsed_Binary,
@@ -746,11 +723,6 @@ max_followup_months    <- max(fu_cens_mo, na.rm = TRUE)
 n_progressed <- sum(baseline_df$progressed == 1, na.rm = TRUE)
 n_total      <- nrow(baseline_df)
 
-cat(sprintf(
-  "At a median follow-up of %.1f months (range %.1f–%.1f), %d/%d patients progressed.",
-  median_followup_months, min_followup_months, max_followup_months,
-  n_progressed, n_total
-))
 
 ## Median follow-up in months (from diagnosis)
 median_followup_months <- median(baseline_df$time_to_event_days, na.rm = TRUE) / 30.4375
@@ -759,13 +731,6 @@ median_followup_months <- median(baseline_df$time_to_event_days, na.rm = TRUE) /
 n_progressed <- sum(baseline_df$progressed == 1, na.rm = TRUE)
 n_total <- nrow(baseline_df)
 
-## Summary statistics for manuscript
-cat(
-  sprintf(
-    "At a median follow-up of %.1f months, %d/%d patients progressed.",
-    median_followup_months, n_progressed, n_total
-  )
-)
 
 
 
@@ -959,7 +924,7 @@ df <- survival_df %>%
   )
 
 ## ============================================================
-## 3) Baseline cohort sentence numbers (diagnosis timepoint)
+## 3) Baseline cohort counts (diagnosis timepoint)
 ## ============================================================
 baseline_df <- df %>%
   filter(Timepoint == "01") %>%
@@ -974,8 +939,6 @@ median_fu_months <- median(baseline_df$time_months, na.rm = TRUE)
 n_prog <- sum(baseline_df$event == 1, na.rm = TRUE)
 n_tot  <- nrow(baseline_df)
 
-cat(sprintf("At a median follow-up of %.1f months, %d/%d patients progressed.\n\n",
-            median_fu_months, n_prog, n_tot))
 
 ## ============================================================
 ## 4) Landmark analysis function
@@ -1107,7 +1070,7 @@ run_landmark <- function(tp,
 }
 
 ## ============================================================
-## 5) Run landmark analyses (choose timepoints you care about)
+## 5) Run landmark analyses (choose timepoints needed for this analysis)
 ## ============================================================
 # Example: post-induction, post-transplant, 1yr maintenance, relapse
 timepoints_to_run <- c("05", "07")
@@ -1147,7 +1110,7 @@ names(results_list) <- timepoints_to_run
 
 
 
-### Repeat but parse into paragraphs 
+### Detailed landmark analyses and supporting tables
 
 library(glue)
 library(stringr)
@@ -1164,12 +1127,6 @@ fmt_num <- function(x, digits = 2) {
   out
 }
 
-fmt_p <- function(p) {
-  out <- rep("NA", length(p))
-  ok <- !is.na(p)
-  out[ok] <- ifelse(p[ok] < 0.001, "<0.001", formatC(p[ok], format = "f", digits = 3))
-  out
-}
 
 extract_hr <- function(fit) {
   s  <- summary(fit)
@@ -1298,7 +1255,7 @@ df <- survival_df %>%
   )
 
 ## ----------------------------
-## 3) Overall follow-up sentence (diagnosis rows)
+## 3) Overall follow-up summary (diagnosis rows)
 ## ----------------------------
 baseline_df <- df %>%
   filter(Timepoint == "01") %>%
@@ -1313,9 +1270,7 @@ median_fu <- median(baseline_df$time_months, na.rm = TRUE)
 n_prog    <- sum(baseline_df$event == 1, na.rm = TRUE)
 n_total   <- nrow(baseline_df)
 
-overall_sentence <- glue("At a median follow-up of {fmt_num(median_fu, 1)} months, {n_prog}/{n_total} patients progressed.")
 
-overall_sentence
 
 ## Follow-up time in months (from diagnosis)
 fu_mo <- baseline_df$time_to_event_days / 30.4375
@@ -1331,11 +1286,6 @@ max_followup_months    <- max(fu_cens_mo, na.rm = TRUE)
 n_progressed <- sum(baseline_df$event == 1, na.rm = TRUE)
 n_total      <- nrow(baseline_df)
 
-cat(sprintf(
-  "At a median follow-up of %.1f months (range %.1f–%.1f), %d/%d patients progressed.",
-  median_followup_months, min_followup_months, max_followup_months,
-  n_progressed, n_total
-))
 
 ## ============================================================
 ## CRITICAL FUNCTION: build_landmark_results()
@@ -1352,14 +1302,13 @@ cat(sprintf(
 #
 # KEY OUTPUTS (stored in returned list):
 #   1. landmark_df: Patient-level data with MRD calls and survival
-#   2. paragraph: Auto-generated results text for manuscript
-#   3. outputs$agreement: Agreement tables (binary concordance, kappa)
-#   4. outputs$joint: Joint risk groups (cfWGS+/- x EasyM high/low)
-#   5. outputs$opt_cut: Optimized threshold details
-#   6. outputs$models: Cox model results and c-indices
+#   2. outputs$agreement: Agreement tables (binary concordance, kappa)
+#   3. outputs$joint: Joint risk groups (cfWGS+/- x EasyM high/low)
+#   4. outputs$opt_cut: Optimized threshold details
+#   5. outputs$models: Cox model results and c-indices
 #
 ## ----------------------------
-## 4) Landmark analysis + abstract text builder
+## 4) Landmark analysis and numerical summaries
 ## ----------------------------
 build_landmark_results <- function(tp = "07",
                                    horizon_months = 24,
@@ -1399,9 +1348,6 @@ build_landmark_results <- function(tp = "07",
     n_em_neg <- sum(lm_df$EasyM_mrd == "MRD-", na.rm = TRUE)
   }
   
-  counts_txt <- glue(
-    "At the {tp_info} landmark (paired assays, n={n_paired}), cfWGS MRD was positive in {n_cf_pos}/{n_paired} and negative in {n_cf_neg}/{n_paired}; EasyM MRD was positive in {n_em_pos}/{n_paired} and negative in {n_em_neg}/{n_paired}."
-  )
   
   ## Binary agreement (only if both vary)
   easyM_bin_varies <- n_distinct(lm_df$EasyM_Binary[!is.na(lm_df$EasyM_Binary)]) >= 2
@@ -1411,9 +1357,6 @@ build_landmark_results <- function(tp = "07",
     tab <- table(BM_call = lm_df$BM_call, EasyM_Binary = lm_df$EasyM_Binary, useNA = "no")
     po  <- sum(diag(tab)) / sum(tab)
     kap <- kappa_2x2(tab)
-    agree_txt <- glue("Binary agreement between modalities was {fmt_num(100*po,1)}% (κ={fmt_num(kap,3)}).")
-  } else {
-    agree_txt <- "EasyM MRD positivity was near-universal at this landmark; binary agreement was not informative."
   }
   
   ## Continuous correlation
@@ -1424,7 +1367,6 @@ build_landmark_results <- function(tp = "07",
     rho   <- unname(ct$estimate)
     cor_p <- ct$p.value
   }
-  cor_txt <- glue("Continuous cfWGS burden correlated with EasyM residual M-protein (Spearman ρ={fmt_num(rho,3)}, p={fmt_p(cor_p)}).")
   
   ## Cox models
   # cfWGS binary
@@ -1438,21 +1380,12 @@ build_landmark_results <- function(tp = "07",
   c_cf_cont   <- c_index_cox(fit_cf_cont, lm_df)
   
   # EasyM binary (NEW)
-  em_bin_txt <- NULL
   c_em_bin <- NA_real_
   hr_em_bin <- NULL
   if (easyM_bin_varies) {
     fit_em_bin <- coxph(Surv(time_months, event) ~ EasyM_Binary, data = lm_df)
     hr_em_bin  <- extract_hr(fit_em_bin)[1, ]
     c_em_bin   <- c_index_cox(fit_em_bin, lm_df)
-    em_bin_txt <- glue(
-      "EasyM MRD positivity was associated with PFS (HR {fmt_num(hr_em_bin$HR,2)}, 95% CI {fmt_num(hr_em_bin$lo,2)}–{fmt_num(hr_em_bin$hi,2)}, p={fmt_p(hr_em_bin$p)})."
-    )
-  } else {
-    # Make the limitation explicit (NEW)
-    em_bin_txt <- glue(
-      "EasyM MRD positivity was evaluated, but was imbalanced at this landmark ({n_em_pos}/{n_paired} MRD+), limiting binary risk group separation."
-    )
   }
   
   # EasyM continuous
@@ -1468,20 +1401,8 @@ build_landmark_results <- function(tp = "07",
   lrt <- anova(fit_cf_bin, fit_int, test = "LRT")
   lrt_p <- lrt$`Pr(>|Chi|)`[2]
   
-  ## Dynamic range sentence: now explicitly quantified (NEW)
-  dyn_range_txt <- NULL
-  if (easyM_bin_varies) {
-    dyn_range_txt <- glue(
-      "Continuous EasyM burden provided greater separation than EasyM binary at this landmark (C-index {fmt_num(c_em_cont,2)} vs {fmt_num(c_em_bin,2)})."
-    )
-  } else {
-    dyn_range_txt <- glue(
-      "Given the imbalance of EasyM binary calls, EasyM was emphasized as a continuous burden measure (C-index {fmt_num(c_em_cont,2)})."
-    )
-  }
   
   ## NEW: “optimal clearance threshold” for EasyM (exploratory)
-  opt_txt <- NULL
   opt <- find_opt_cut_logrank(
     time   = lm_df$time_months,
     event  = lm_df$event,
@@ -1513,7 +1434,6 @@ build_landmark_results <- function(tp = "07",
         EasyM_opt_binary = if_else(EasyM_log10 > opt_cut_log10, 1L, 0L)  # 1=residual, 0=cleared
       )
     
-    agree_opt_txt <- NULL
     
     # Only compute if both variables vary
     if (n_distinct(lm_df$BM_call[!is.na(lm_df$BM_call)]) >= 2 &&
@@ -1565,42 +1485,10 @@ build_landmark_results <- function(tp = "07",
           .groups = "drop"
         )
       
-      discord_txt <- if (nrow(discord_sum) == 0) {
-        "No discordant cases were observed."
-      } else {
-        lines <- discord_sum %>%
-          rowwise() %>%
-          mutate(line = {
-            base <- paste0(discord_type, " (n=", n, "; patients=", patients,
-                           "; relapsed=", n_relapsed)
-            if (n_relapsed > 0) {
-              paste0(base,
-                     "; time-to-event among relapsers median ",
-                     fmt_num(med_tte_mo, 1),
-                     " months (range ",
-                     fmt_num(min_tte_mo, 1), "–", fmt_num(max_tte_mo, 1),
-                     "))")
-            } else {
-              paste0(base, ")")
-            }
-          }) %>%
-          pull(line)
-        paste0("Discordant cases were: ", paste(lines, collapse = "; "), ".")
-      }
       
-      agree_opt_txt <- glue(
-        "Agreement between cfWGS binary and the optimized EasyM clearance threshold was {fmt_num(100*po_opt,1)}% ({n_agree_opt}/{n_total_opt}; κ={fmt_num(kap_opt,3)}). {discord_txt}"
-      )
       
-    } else {
-      agree_opt_txt <- "Agreement between cfWGS binary and the optimized EasyM threshold was not estimable due to lack of variation."
     }
     
-    opt_txt <- glue(
-      "Exploratory optimization of an EasyM clearance threshold identified {fmt_num(opt_cut_raw,2)} (log10={fmt_num(opt_cut_log10,2)}), splitting {opt$n_low} cleared vs {opt$n_high} residual; this split yielded HR {fmt_num(hr_opt$HR,2)} (95% CI {fmt_num(hr_opt$lo,2)}–{fmt_num(hr_opt$hi,2)}), log-rank p={fmt_p(opt$p)}."
-    )
-  } else {
-    opt_txt <- "An exploratory data-driven EasyM clearance threshold could not be stably estimated at this landmark given sample size and group constraints."
   }
   
   ## Joint risk groups (cfWGS +/- x EasyM high/low by chosen rule)
@@ -1630,7 +1518,6 @@ build_landmark_results <- function(tp = "07",
     count(joint_group, name = "n") %>%
     arrange(desc(n))
   
-  joint_txt <- glue("Joint stratification yielded: {paste0(joint_counts$joint_group, ' (n=', joint_counts$n, ')', collapse='; ')}.")
   
   ## --- Joint risk groups summary with relapse timing ---
   joint_summary <- lm_df %>%
@@ -1656,73 +1543,15 @@ build_landmark_results <- function(tp = "07",
     ) %>%
     arrange(joint_group)
   
-  joint_txt_updated <- paste0(
-    "Joint stratification yielded: ",
-    paste0(
-      as.character(joint_summary$joint_group),
-      " (n=", joint_summary$n,
-      ", relapsed=", joint_summary$n_relapsed,
-      ifelse(
-        joint_summary$n_relapsed > 0,
-        paste0(
-          ", time-to-event among relapsers median ",
-          fmt_num(joint_summary$med_tte_mo, 1),
-          " months (range ",
-          fmt_num(joint_summary$min_tte_mo, 1),
-          "–",
-          fmt_num(joint_summary$max_tte_mo, 1),
-          ")"
-        ),
-        ""
-      ),
-      ")",
-      collapse = "; "
-    ),
-    "."
-  )
   
-  ## Build abstract-ready paragraph (more detailed, with EasyM binary HR when possible)
-  cf_bin_txt <- glue(
-    "cfWGS MRD positivity was associated with inferior PFS (HR {fmt_num(hr_cf_bin$HR,2)}, 95% CI {fmt_num(hr_cf_bin$lo,2)}–{fmt_num(hr_cf_bin$hi,2)}, p={fmt_p(hr_cf_bin$p)})."
-  )
   
-  cf_cont_txt <- glue(
-    "Higher cfWGS MRD burden was also associated with shorter PFS (per 1 SD increase: HR {fmt_num(hr_cf_cont$HR,2)}, 95% CI {fmt_num(hr_cf_cont$lo,2)}–{fmt_num(hr_cf_cont$hi,2)}, p={fmt_p(hr_cf_cont$p)})."
-  )
   
-  em_cont_txt <- glue(
-    "Higher EasyM residual M-protein was associated with shorter PFS (per 1 SD increase: HR {fmt_num(hr_em_cont$HR,2)}, 95% CI {fmt_num(hr_em_cont$lo,2)}–{fmt_num(hr_em_cont$hi,2)}, p={fmt_p(hr_em_cont$p)})."
-  )
   
-  head2head_txt <- glue(
-    "In head-to-head comparison, discrimination for PFS was C-index {fmt_num(c_cf_bin,2)} for cfWGS binary and {fmt_num(c_em_cont,2)} for continuous EasyM."
-  )
   
-  integ_txt <- glue(
-    "An integrated model combining cfWGS and EasyM showed C-index {fmt_num(c_int,2)} and improved fit versus cfWGS alone (likelihood-ratio p={fmt_p(lrt_p)})."
-  )
   
-  paragraph <- paste(
-    overall_sentence,
-    counts_txt,
-    cf_bin_txt,
-    em_bin_txt,
-    dyn_range_txt,
-    cf_cont_txt,
-    em_cont_txt,
-    agree_txt,
-    cor_txt,
-    head2head_txt,
-    integ_txt,
-    opt_txt,
-    agree_opt_txt,
-    joint_txt_updated,
-    sep = " "
-  )
   
   list(
     landmark_df = lm_df,
-    paragraph   = paragraph,
     summary = list(
       tp = tp,
       tp_info = tp_info,
@@ -1742,31 +1571,12 @@ build_landmark_results <- function(tp = "07",
   
   ### Get full exports 
   
-  # --- at the end of build_landmark_results(), replace your final list(...) with:
+  # --- Return the landmark results and supporting tables from build_landmark_results():
   
   outputs <- list(
     # Core objects
     landmark_df   = lm_df,
-    paragraph     = paragraph,
     
-    # Key sentence fragments (useful for debugging)
-    text_pieces = list(
-      overall_sentence = overall_sentence,
-      counts_txt       = counts_txt,
-      cf_bin_txt       = cf_bin_txt,
-      em_bin_txt       = em_bin_txt,
-      dyn_range_txt    = dyn_range_txt,
-      cf_cont_txt      = cf_cont_txt,
-      em_cont_txt      = em_cont_txt,
-      agree_txt        = agree_txt,
-      cor_txt          = cor_txt,
-      head2head_txt    = head2head_txt,
-      integ_txt        = integ_txt,
-      opt_txt          = opt_txt,
-      agree_opt_txt    = agree_opt_txt,
-      joint_txt        = joint_txt,
-      joint_txt_updated = joint_txt_updated
-    ),
     
     # Agreement / discordance tables
     agreement = list(
@@ -1822,7 +1632,7 @@ build_landmark_results <- function(tp = "07",
       fit_opt      = if (exists("fit_opt")) fit_opt else NULL
     ),
     
-    # Optimal cutoff details (store whatever your find_opt_cut_logrank returns)
+    # Optimal cutoff details (retain the output of find_opt_cut_logrank)
     opt_cut = list(
       opt = if (exists("opt")) opt else NULL,
       # convenience copies (if you created them)
@@ -1833,7 +1643,6 @@ build_landmark_results <- function(tp = "07",
   
   return(list(
     landmark_df = lm_df,
-    paragraph   = paragraph,
     summary     = summary,   # keep what already built
     outputs     = outputs
   ))
@@ -1846,7 +1655,7 @@ build_landmark_results <- function(tp = "07",
 ## ============================================================
 # Saves all results from a landmark analysis to CSV files for review
 #
-# **KEY TABLE FOR YOUR QUESTION:**
+# Landmark-analysis summary table:
 # The file named "{prefix}_landmark_df.csv" contains:
 #   - Patient ID
 #   - Timepoint
@@ -1889,15 +1698,12 @@ export_landmark_outputs <- function(res, out_dir = "Output_EasyM_MRD_analysis_20
     invisible(TRUE)
   }
   
-  # 1) Paragraph text (no truncation)
-  txt_path <- file.path(out_dir, paste0(prefix, "_paragraph.txt"))
-  writeLines(res$outputs$paragraph, txt_path)
   
-  # 2) Landmark analysis dataframe
+  # 1) Landmark analysis dataframe
   lm_path <- file.path(out_dir, paste0(prefix, "_landmark_df.csv"))
   readr::write_csv(res$outputs$landmark_df, lm_path)
   
-  # 3) Key tables
+  # 2) Key tables
   safe_write_csv(res$outputs$agreement$tab_binary,
                  file.path(out_dir, paste0(prefix, "_agreement_binary_table.csv")))
   safe_write_csv(res$outputs$agreement$tab_opt,
@@ -1912,7 +1718,7 @@ export_landmark_outputs <- function(res, out_dir = "Output_EasyM_MRD_analysis_20
   safe_write_csv(res$outputs$joint$joint_summary,
                  file.path(out_dir, paste0(prefix, "_joint_summary.csv")))
   
-  # 4) Model summary tables (HRs + c-index + correlation)
+  # 3) Model summary tables (HRs + c-index + correlation)
   safe_write_csv(res$outputs$models$hr_cf_bin,
                  file.path(out_dir, paste0(prefix, "_hr_cfWGS_binary.csv")))
   safe_write_csv(res$outputs$models$hr_cf_cont,
@@ -1939,7 +1745,7 @@ export_landmark_outputs <- function(res, out_dir = "Output_EasyM_MRD_analysis_20
     file.path(out_dir, paste0(prefix, "_metrics.csv"))
   )
   
-  # 5) Optimal cutoff (if present)
+  # 4) Optimal cutoff (if present)
   opt <- res$outputs$opt_cut$opt
   if (!is.null(opt)) {
     # store a human-readable one-row summary
@@ -1958,10 +1764,10 @@ export_landmark_outputs <- function(res, out_dir = "Output_EasyM_MRD_analysis_20
     saveRDS(opt, file.path(out_dir, paste0(prefix, "_opt_cut_full.rds")))
   }
   
-  # 6) Save everything as an RDS so nothing is lost (including coxph objects)
+  # 5) Save all numerical results and model objects as an RDS
   saveRDS(res, file.path(out_dir, paste0(prefix, "_FULL_RESULT.rds")))
   
-  # 7) (Optional) session info for reproducibility
+  # 6) Session info for reproducibility
   writeLines(capture.output(sessionInfo()),
              file.path(out_dir, paste0(prefix, "_sessionInfo.txt")))
   
@@ -2216,13 +2022,7 @@ pval <- ct$p.value
 n_samples  <- nrow(cor_df)
 n_patients <- n_distinct(cor_df$Patient)
 
-sentence <- glue(
-  "Across post-treatment timepoints (03/05/07; {n_samples} samples from {n_patients} patients), ",
-  "continuous cfWGS burden correlated with EasyM residual M-protein (Spearman ρ={fmt_num(rho,3)}, p={fmt_p(pval)}), ",
-  "supporting biological concordance between orthogonal plasma signals."
-)
 
-writeLines(sentence)
 
 
 
@@ -2285,17 +2085,7 @@ counts <- clin_diag %>%
   )
 
 
-# (5) Build the single sentence (use glue for readability)
-sentence <- with(counts, glue(
-  "At diagnosis the patients were a median {age_median} years old, ",
-  "{n_IgG}/8 IgG, {n_IgA}/8 IgA, {n_LC}/8 light‑chain only; key lesions included ",
-  "{n_t11_14}/8 t(11;14), {n_t4_14}/8 t(4;14), {n_t14_16}/8 t(14;16), ",
-  "{n_del17p}/8 del(17p), {n_amp1q}/8 1q amplification and {n_hyperdip}/8 hyperdiploid, ",
-  "with {n_high_risk}/8 classified as high cytogenetic risk and cfDNA tumour fractions ",
-  "ranging {sprintf('%.1f', tf_min)}–{sprintf('%.1f', tf_max)} % (median {sprintf('%.1f', tf_median)} %)."
-))
 
-cat(sentence, "\n")
 
 ## ============================================================
 ## FINAL INTERMEDIATE EXPORT: EasyM table for 3_2 and 4_1

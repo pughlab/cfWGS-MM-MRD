@@ -271,7 +271,7 @@ patients_with_both   <- read_csv("patients_with_cfDNA_at_baseline_and_monitoring
 pon_insert <- pon_insert %>%
   filter(!grepl("TGL49_0267_Pb_U_PE_428", Sample))
 
-# Prepare your pon_insert with the same columns (as NA)
+# Prepare pon_insert with the same columns (as NA)
 pon_insert2 <- pon_insert %>%
   mutate(
     Patient        = NA_character_,   # same type as data_insert$Patient
@@ -504,7 +504,7 @@ fs_cutoffs_tbl <- pon_fs %>%
 # 2) (Optional) print to console
 print(fs_cutoffs_tbl)
 
-# 3) Write out to CSV in your output directory
+# 3) Write out to CSV in the output directory
 readr::write_csv(
   fs_cutoffs_tbl,
   file.path(out.dir, "FS_cutoffs_table_healthy_controls.csv")
@@ -586,7 +586,7 @@ mm_dars_small <- mm_dars %>%
 mm_dars2_missing <- mm_dars2_small %>%
   anti_join(mm_dars_small %>% distinct(.data$Sample), by = "Sample")
 mm_dars_combined <- bind_rows(mm_dars_small, mm_dars2_missing) %>%
-  # normalize your date columns
+  # normalize the date columns
   mutate(
     Date_of_sample_collection = as.Date(Date_of_sample_collection)
   ) %>%
@@ -691,7 +691,7 @@ merged_data_grouped <- merged_data_grouped %>%
 all_insert_unique <- all_insert %>%
   distinct(Sample, fragmentomics_sequencing_platform, fragmentomics_sample_role, Proportion.Short)
 
-# 2) Left‐join onto your merged_data_grouped by Sample
+# 2) Left‐join onto merged_data_grouped by Sample
 merged_with_short <- merged_data_grouped %>%
   left_join(
     all_insert_unique,
@@ -1031,7 +1031,7 @@ hc_ranges_selected <- healthy_dars %>%
 # View the table
 print(hc_ranges_selected)
 
-# Save to CSV in your output directory
+# Save to CSV in the output directory
 readr::write_csv(
   hc_ranges_selected,
   file.path(out.dir, "HC_Ranges_Selected_MM_DARs_Metrics.csv")

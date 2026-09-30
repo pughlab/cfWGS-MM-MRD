@@ -302,7 +302,7 @@ treat_long <- raw |>
 # ──────────────────────────────────────────────────────────────────────────────
 #  6.  Progression / relapse table --------------------------------------------
 # ──────────────────────────────────────────────────────────────────────────────
-# 1. identify your relapse columns
+# 1. identify the relapse columns
 relapse_cols <- names(raw)[ grepl("^relapse_\\d+$", names(raw)) ]
 
 # 2. coerce them all to character (so pivot_longer can combine them)
@@ -396,7 +396,7 @@ list(
 #  1.  Read the raw table ------------------------------------------------------
 # ──────────────────────────────────────────────────────────────────────────────
 df_raw <- read_excel(
-  "M4_CMRG_Data/June update/M4_COHORT_STEM_CELL_TRANSPLANT.xlsx",    # ← your file here
+  "M4_CMRG_Data/June update/M4_COHORT_STEM_CELL_TRANSPLANT.xlsx",    # ← stem-cell transplant metadata workbook
   sheet = 1,                          # adjust if needed
   na    = c("NA","N/A","", " ")) |>   # treat blank‑likes as NA
   janitor::remove_empty("rows")                 # drop fully‑empty rows
@@ -455,7 +455,7 @@ df_clean <- df %>%
     injected_cd34 = parse_number(as.character(injected_cd34),
                                  locale = locale(decimal_mark = ".")) * 1e6,
     
-    # re‑parse your other numeric %% columns as before
+    # re‑parse the other numeric %% columns as before
     plasma_cell_percent          = parse_number(as.character(plasma_cell_percent)),
     plasma_cell_col_res_percent  = parse_number(as.character(plasma_cell_col_res_percent))
   )
@@ -483,7 +483,7 @@ df_clean <- df_clean |>
 #  1.  read the worksheet ------------------------------------------------------
 # ──────────────────────────────────────────────────────────────────────────────
 raw <- read_excel(
-  "Clinical data/IMMAGINE/IMG_request_20241009 (2).xlsx",   # ← your file
+  "Clinical data/IMMAGINE/IMG_request_20241009 (2).xlsx",   # ← the input file
   sheet = 1,
   na    = c("", "NA", "N/A", " ", "Pending")
 ) %>% 
@@ -722,7 +722,7 @@ fish_flags_corrected <- fish_flags %>%          # keeps original columns
     .fns  = ~ flag_it(fish_text, fish_patterns[[cur_column()]]),
     .names = "{.col}"                                # overwrite / create
   )) %>%
-  # re‑order to your preferred column order -------------
+  # re‑order to the preferred column order -------------
 relocate(id, fish_text, everything())
 
 
@@ -822,7 +822,7 @@ first_sample_dates <- combined_clinical_data_updated %>%
     .groups = "drop"
   )
 
-# 2) Clean your IMMAGINE_OS table (empty → NA, parse dates)
+# 2) Clean the IMMAGINE_OS table (empty → NA, parse dates)
 immagine_clean <- IMMAGINE_OS %>%
   mutate(across(c(Maintenance_Start_Date, Relapse1_Date:Relapse3_Date, Last_Followup_Date),
                 ~ na_if(., "") %>% as.Date())) %>%
@@ -846,7 +846,7 @@ immagine_relapse <- immagine_clean %>%
   )
 
 ## Correct the "-"
-# Fix the Patient codes in your main table:
+# Fix the Patient codes in the main table:
 final_tbl <- final_tbl %>%
   mutate(
     Patient = str_replace_all(Patient, "[\u2010\u2011\u2012\u2013]", "-")
@@ -992,7 +992,7 @@ M4_OS2 <- M4_OS_info %>%
   mutate(DATE_OF_LAST_FOLLOWUP = as_date(DATE_OF_LAST_FOLLOWUP))
 
 # 2) Join them by patient ID
-#    Option A: if your ID is stored in M4_OS_info$M4_id
+#    Option A: if the ID is stored in M4_OS_info$M4_id
 joined_A <- latest_dates2 %>%
   inner_join(M4_OS2, by = c("Patient" = "M4_id"))
 
@@ -1019,7 +1019,7 @@ latest_dates2 <- latest_dates %>%
 
 # 2. Update M4_OS_info
 M4_OS_updated <- M4_OS_info %>%
-  # make sure your OS dates are Date class
+  # make sure the OS dates are Date class
   mutate(DATE_OF_LAST_FOLLOWUP = as_date(DATE_OF_LAST_FOLLOWUP)) %>%
   
   # join in the new latest_date
@@ -1053,7 +1053,7 @@ M4_OS2 <- M4_OS_updated %>%
     DATE_OF_LAST_FOLLOWUP
   )
 
-# 2) Join onto your final_tbl
+# 2) Join onto final_tbl
 combined_tbl <- combined_tbl %>%
   left_join(M4_OS2, by = "Patient")
 
@@ -1081,7 +1081,7 @@ spore_OS2 <- spore_OS_info %>%
     DATE_OF_LAST_FOLLOWUP_SPORE = as_date(DATE_OF_LAST_FOLLOWUP_SPORE)
   )
 
-# 2) Left‐join onto your existing combined_tbl
+# 2) Left‐join onto the existing combined_tbl
 combined_tbl <- combined_tbl %>%
   left_join(spore_OS2, by = "Patient") %>%
   
@@ -1096,7 +1096,7 @@ combined_tbl <- combined_tbl %>%
 
 # Check date of death 
 combined_tbl <- combined_tbl %>%
-  # ensure your death column is Date
+  # ensure the death column is Date
   mutate(DATE_OF_DEATH = as_date(DATE_OF_DEATH)) %>%
   
   # for anyone flagged as Deceased but missing DATE_OF_DEATH,
